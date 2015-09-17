@@ -1,0 +1,27 @@
+{
+  "name": "xpath-dom",
+  "version": "0.0.1",
+  "description": "A DOM adapter for xpath-evaluator.",
+  "main": "lib/xpath_dom.js",
+  "author": "Jonas Amundsen <jonasba@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/badeball/xpath-dom.git"
+  },
+  "dependencies": {
+    "xpath-evaluator": "badeball/xpath-evaluator"
+  },
+  "devDependencies": {
+    "browserify": "11.1.0",
+    "eslint": "0.24.1",
+    "jsdom": "3.1.2",
+    "mocha": "2.3.0",
+    "uglifyjs": "2.4.10"
+  },
+  "files": [
+    "install.js",
+    "register.js",
+    "lib"
+  ],
+  "license": "MIT"
+}
