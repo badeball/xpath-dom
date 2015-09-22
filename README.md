@@ -1,5 +1,7 @@
 # xpath-dom
 
+[![Build Status](https://travis-ci.org/badeball/xpath-dom.svg?branch=master)](https://travis-ci.org/badeball/xpath-dom)
+
 A DOM adapter for [xpath-evaluator][xpath-evaluator]. Together with its
 dependencies, it serves as a full shim for the [DOM Level 3 XPath
 specification][dom3-xpath].
