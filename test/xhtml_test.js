@@ -19,7 +19,7 @@ var assertEvaluatesToValue = Helper.assertEvaluatesToValue.bind(null, document.b
 // TODO: Remove namespace prefix from test 01 once support for namespaces are implemented.
 
 suite("XPathDOM", function () {
-  suite("xhtml", function () {
+  suite.skip("xhtml", function () {
     test("00", function () {
       assertEvaluatesToValue("name(.)", "wgx:element");
     });
