@@ -24,7 +24,7 @@ module.exports = function(config) {
       }
     },
 
-    reporters: ["progress"],
+    reporters: ["progress", "saucelabs"],
 
     logLevel: config.LOG_INFO,
 
