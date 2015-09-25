@@ -19,6 +19,7 @@
     "karma-es5-shim": "0.0.4",
     "karma-mocha": "0.2.0",
     "karma-phantomjs-launcher": "0.2.1",
+    "karma-sauce-launcher": "0.2.14",
     "mocha": "2.3.0",
     "phantomjs": "1.9.18",
     "uglifyjs": "2.4.10"
