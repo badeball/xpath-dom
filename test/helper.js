@@ -1,10 +1,8 @@
-/* eslint-env node */
+/* eslint-env browser, node */
 
 "use strict";
 
 var assert = require("assert");
-
-var jsdom = require("jsdom");
 
 var XPathEvaluator = require("../register");
 
@@ -76,6 +74,14 @@ module.exports = {
   createDocument: function () {
     var args = [].slice.call(arguments);
 
-    return jsdom.jsdom(args.join(""));
+    var html = args.join("");
+
+    var iframe = document.createElement("iframe");
+
+    document.body.appendChild(iframe);
+
+    iframe.contentWindow.document.write(html);
+
+    return iframe.contentWindow.document;
   }
 };

@@ -1,4 +1,4 @@
-MOCHA := ./node_modules/.bin/mocha
+KARMA := ./node_modules/.bin/karma
 ESLINT := ./node_modules/.bin/eslint
 BROWSERIFY := ./node_modules/.bin/browserify
 UGLIFYJS := ./node_modules/.bin/uglifyjs
@@ -9,7 +9,7 @@ lint:
 	@$(ESLINT) .
 
 test:
-	@$(MOCHA) --recursive --reporter dot --ui tdd
+	@$(KARMA) start
 
 build:
 	[[ -d dist ]] || mkdir dist
