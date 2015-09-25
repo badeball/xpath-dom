@@ -5,11 +5,16 @@ UGLIFYJS := ./node_modules/.bin/uglifyjs
 
 all: lint test
 
+ci: lint test-ci
+
 lint:
 	@$(ESLINT) .
 
 test:
 	@$(KARMA) start
+
+test-ci:
+	@$(KARMA) start --browsers Firefox,Chrome,Opera,Safari,IE11,IE10,IE9,IE8
 
 build:
 	[[ -d dist ]] || mkdir dist
