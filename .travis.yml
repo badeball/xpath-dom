@@ -1,5 +1,2 @@
 language: node_js
-node_js:
-  - "4.0.0"
-  - "4.1.0"
 script: make ci
