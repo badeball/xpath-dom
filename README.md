@@ -1,6 +1,6 @@
 # xpath-dom
 
-[![Build Status](https://travis-ci.org/badeball/xpath-dom.svg?branch=master)](https://travis-ci.org/badeball/xpath-dom)
+[![Sauce Test Status](https://saucelabs.com/browser-matrix/badeball.svg)](https://saucelabs.com/u/badeball)
 
 A DOM adapter for [xpath-evaluator][xpath-evaluator]. Together with its
 dependencies, it serves as a full shim for the [DOM Level 3 XPath
