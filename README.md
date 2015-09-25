@@ -37,8 +37,6 @@ XPath.evaluate("//*", document, null, XPath.XPathResult.ORDERED_NODE_SNAPSHOT_TY
 
 ## Known issues
 
-* The shim is not actually tested in real browser environments yet.
-
 * Namespaces are not yet supported.
 
 * The `lang()` function is not yet implemented.
