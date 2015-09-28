@@ -374,11 +374,19 @@ suite("XPathDOM", function () {
     });
 
     test("79", function () {
-      assertEvaluatesToNodeSet(".//blockquote/comment()", ["comment(blockquoteComment)", "comment(?pi hoge ?)"]);
+      var expected = Helper.IS_IE9 ?
+        ["comment(blockquoteComment)", "comment( hoge)"] :
+        ["comment(blockquoteComment)", "comment(?pi hoge ?)"];
+
+      assertEvaluatesToNodeSet(".//blockquote/comment()", expected);
     });
 
     test("80", function () {
-      assertEvaluatesToNodeSet("//comment()", ["comment(blockquoteComment)", "comment(?pi hoge ?)"]);
+      var expected = Helper.IS_IE9 ?
+        ["comment(blockquoteComment)", "comment( hoge)"] :
+        ["comment(blockquoteComment)", "comment(?pi hoge ?)"];
+
+      assertEvaluatesToNodeSet("//comment()", expected);
     });
 
     test("81", function () {

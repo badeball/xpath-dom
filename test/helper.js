@@ -83,5 +83,7 @@ module.exports = {
     iframe.contentWindow.document.write(html);
 
     return iframe.contentWindow.document;
-  }
+  },
+
+  IS_IE9: navigator.userAgent.indexOf("MSIE 9.0") !== -1
 };
