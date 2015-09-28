@@ -14,7 +14,7 @@ test:
 	@$(KARMA) start
 
 test-ci:
-	@$(KARMA) start --browsers Firefox,Chrome,Opera,Safari,IE11,IE10,IE9,IE8
+	@$(KARMA) start --browsers PhantomJS,jsdom,Firefox,Chrome,Opera,Safari,IE11,IE10,IE9,IE8
 
 build:
 	[[ -d dist ]] || mkdir dist
