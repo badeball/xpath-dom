@@ -17,7 +17,7 @@
     "karma": "0.13.10",
     "karma-browserify": "4.3.0",
     "karma-es5-shim": "0.0.4",
-    "karma-jsdom-launcher": "badeball/karma-jsdom-launcher",
+    "karma-jsdom-launcher": "^1.0.0",
     "karma-mocha": "0.2.0",
     "karma-phantomjs-launcher": "0.2.1",
     "karma-sauce-launcher": "0.2.14",
