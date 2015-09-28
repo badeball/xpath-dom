@@ -141,15 +141,15 @@ suite("XPathDOM", function () {
       assertEvaluatesToValue("string(html - html)", "NaN");
     });
 
-    test.skip("27", function () {
+    test("27", function () {
       assertEvaluatesToValue("normalize-space(string())", DOCUMENT_AS_STRING);
     });
 
-    test.skip("28", function () {
+    test("28", function () {
       assertEvaluatesToValue("normalize-space(string(.))", DOCUMENT_AS_STRING);
     });
 
-    test.skip("29", function () {
+    test("29", function () {
       assertEvaluatesToValue("normalize-space(string(/))", DOCUMENT_AS_STRING);
     });
 

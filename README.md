@@ -42,5 +42,3 @@ XPath.evaluate("//*", document, null, XPath.XPathResult.ORDERED_NODE_SNAPSHOT_TY
 * The `lang()` function is not yet implemented.
 
 * The `namespace-uri()` function is not yet implemented.
-
-* The `string()` function does not behave correctly on document nodes.
