@@ -2,15 +2,7 @@ language: node_js
 node_js:
   - "4.1.0"
 env:
-  - BROWSERS=PhantomJS
-  - BROWSERS=jsdom
-  - BROWSERS=Firefox
-  - BROWSERS=Chrome
-  - BROWSERS=Opera
-  - BROWSERS=Safari
-  - BROWSERS=IE11
-  - BROWSERS=IE10
-  - BROWSERS=IE9
+  - BROWSERS=PhantomJS,jsdom,Firefox,Chrome,Opera,Safari,IE11,IE10,IE9
   - BROWSERS=IE8
 matrix:
   allow_failures:
