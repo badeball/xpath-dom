@@ -12,5 +12,8 @@ env:
   - BROWSERS=IE10
   - BROWSERS=IE9
   - BROWSERS=IE8
+matrix:
+  allow_failures:
+    - env: BROWSERS=IE8
 before_script: make lint
 script: make test-ci
