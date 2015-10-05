@@ -127,8 +127,6 @@ XPathDOM.prototype.getParent = function () {
 XPathDOM.prototype.getOwnerDocument = function () {
   if (this.nativeNode.ownerDocument) {
     return new XPathDOM(this.nativeNode.ownerDocument);
-  } else {
-    return this;
   }
 };
 
@@ -140,10 +138,16 @@ XPathDOM.prototype.getElementById = function (id) {
   }
 };
 
+XPathDOM.prototype.isEqual = function (node) {
+  return this.getNativeNode() === node.getNativeNode();
+};
+
 XPathDOM.compareDocumentPosition = function (a, b) {
-  if (a.getNativeNode().compareDocumentPosition(b.getNativeNode()) & DocumentPosition.PRECEDING) {
+  var comparing = a.getNativeNode().compareDocumentPosition(b.getNativeNode());
+
+  if (comparing & DocumentPosition.PRECEDING) {
     return 1;
-  } else if (a.getNativeNode().compareDocumentPosition(b.getNativeNode()) & DocumentPosition.FOLLOWING) {
+  } else if (comparing & DocumentPosition.FOLLOWING) {
     return -1;
   } else {
     return 0;
@@ -2408,6 +2412,8 @@ module.exports = {
 
 "use strict";
 
+var Node = require("../node");
+
 var NodeSetType = require("../types/node_set_type");
 
 var StringType = require("../types/string_type");
@@ -2439,7 +2445,11 @@ module.exports = {
     var nodes = new NodeSetType();
 
     for (var i = 0; i < ids.length; i++) {
-      node = context.getNode().getOwnerDocument().getElementById(ids[i]);
+      if (context.getNode().getNodeType() === Node.DOCUMENT_NODE) {
+        node = context.getNode().getElementById(ids[i]);
+      } else {
+        node = context.getNode().getOwnerDocument().getElementById(ids[i]);
+      }
 
       if (node) {
         nodes = nodes.merge(new NodeSetType([node]));
@@ -2450,7 +2460,7 @@ module.exports = {
   }
 };
 
-},{"../types/node_set_type":96,"../types/string_type":98}],76:[function(require,module,exports){
+},{"../node":94,"../types/node_set_type":96,"../types/string_type":98}],76:[function(require,module,exports){
 /* eslint-env node */
 
 "use strict";
@@ -2889,7 +2899,7 @@ module.exports = {
 function Iterator (list, reversed) {
   this.list = list;
   this.reversed = reversed;
-  this.current = reversed ? list.last() : list.first();
+  this.current = reversed ? list.last_ : list.first_;
   this.lastReturned = null;
   this.i = 0;
 }
@@ -2910,7 +2920,7 @@ Iterator.prototype.next = function () {
       this.current = this.current.next;
     }
 
-    return this.lastReturned;
+    return this.lastReturned.node;
   }
 };
 
@@ -2992,6 +3002,10 @@ var Adapter = require("../adapter");
 
 var Iterator = require("../iterator");
 
+function Entry (node) {
+  this.node = node;
+}
+
 function NodeSetType (value) {
   this.first_ = null;
   this.last_ = null;
@@ -3009,11 +3023,11 @@ NodeSetType.prototype.iterator = function (reversed) {
 };
 
 NodeSetType.prototype.first = function () {
-  return this.first_;
+  return this.first_.node;
 };
 
 NodeSetType.prototype.last = function () {
-  return this.last_;
+  return this.last_.node;
 };
 
 NodeSetType.prototype.length = function () {
@@ -3045,32 +3059,36 @@ NodeSetType.prototype.merge = function (b) {
 };
 
 NodeSetType.prototype.push = function (node) {
-  node.next = null;
-  node.previous = this.last_;
+  var entry = new Entry(node);
+
+  entry.next = null;
+  entry.previous = this.last_;
 
   if (this.first_) {
-    this.last_.next = node;
+    this.last_.next = entry;
   } else {
-    this.first_ = node;
+    this.first_ = entry;
   }
 
-  this.last_ = node;
+  this.last_ = entry;
   this.length_++;
 
   return this;
 };
 
 NodeSetType.prototype.unshift = function (node) {
-  node.previous = null;
-  node.next = this.first_;
+  var entry = new Entry(node);
+
+  entry.previous = null;
+  entry.next = this.first_;
 
   if (this.first_) {
-    this.first_.previous = node;
+    this.first_.previous = entry;
   } else {
-    this.last_ = node;
+    this.last_ = entry;
   }
 
-  this.first_ = node;
+  this.first_ = entry;
   this.length_++;
 
   return this;
@@ -3110,12 +3128,12 @@ NodeSetType.mergeWithOrder = function (a, b, comparator) {
   var merged = a, tail = null, next = null, length = 0;
 
   while (aCurr && bCurr) {
-    if (aCurr.getNativeNode() === bCurr.getNativeNode()) {
+    if (aCurr.node.isEqual(bCurr.node)) {
       next = aCurr;
       aCurr = aCurr.next;
       bCurr = bCurr.next;
     } else {
-      var compareResult = comparator(aCurr, bCurr);
+      var compareResult = comparator(aCurr.node, bCurr.node);
 
       if (compareResult > 0) {
         next = bCurr;
@@ -3165,7 +3183,7 @@ NodeSetType.mergeWithoutOrder = function (a, b) {
 
   while ((node = iter.next())) {
     var keep = nodes.every(function (addedNode) {
-      return addedNode.getNativeNode() !== node.getNativeNode();
+      return !addedNode.isEqual(node);
     });
 
     if (keep) {
