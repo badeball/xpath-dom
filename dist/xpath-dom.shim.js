@@ -19,8 +19,6 @@ if (!window.document.evaluate) {
 }
 
 },{"./register":106}],2:[function(require,module,exports){
-/* eslint-env node */
-
 "use strict";
 
 var DocumentPosition = {
@@ -143,6 +141,14 @@ XPathDOM.prototype.isEqual = function (node) {
 };
 
 XPathDOM.compareDocumentPosition = function (a, b) {
+  if (a.getNativeNode() instanceof Attr) {
+    a = a.getParent();
+  }
+
+  if (b.getNativeNode() instanceof Attr) {
+    b = b.getParent();
+  }
+
   var comparing = a.getNativeNode().compareDocumentPosition(b.getNativeNode());
 
   if (comparing & DocumentPosition.PRECEDING) {
