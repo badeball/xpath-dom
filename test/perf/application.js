@@ -1,5 +1,3 @@
-/* eslint-env browser, node */
-
 "use strict";
 
 var Benchmark = require("benchmark");

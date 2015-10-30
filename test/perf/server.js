@@ -1,5 +1,3 @@
-/* eslint-env node */
-
 "use strict";
 
 var babelify = require("babelify"),
