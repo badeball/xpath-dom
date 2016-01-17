@@ -83,5 +83,5 @@ module.exports = {
     return iframe.contentWindow.document;
   },
 
-  IS_IE9: navigator.userAgent.indexOf("MSIE 9.0") !== -1
+  IS_IE9: navigator.userAgent && navigator.userAgent.indexOf("MSIE 9.0") !== -1
 };
