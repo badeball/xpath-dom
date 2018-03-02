@@ -32,13 +32,13 @@ module.exports = function(config) {
       Firefox: {
         base: "SauceLabs",
         browserName: "Firefox",
-        platform: "Windows 7"
+        platform: "Windows 10"
       },
 
       Chrome: {
         base: "SauceLabs",
         browserName: "Chrome",
-        platform: "Windows 7"
+        platform: "Windows 10"
       },
 
       Safari: {
@@ -51,14 +51,14 @@ module.exports = function(config) {
         base: "SauceLabs",
         browserName: "Internet Explorer",
         version: "11",
-        platform: "Windows 7"
+        platform: "Windows 10"
       },
 
       IE10: {
         base: "SauceLabs",
         browserName: "Internet Explorer",
         version: "10",
-        platform: "Windows 7"
+        platform: "Windows 8"
       },
 
       IE9: {
