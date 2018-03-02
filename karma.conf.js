@@ -47,6 +47,48 @@ module.exports = function(config) {
         platform: "OS X 10.11"
       },
 
+      Edge18: {
+        base: "SauceLabs",
+        browserName: "MicrosoftEdge",
+        version: "18",
+        platform: "Windows 10"
+      },
+
+      Edge17: {
+        base: "SauceLabs",
+        browserName: "MicrosoftEdge",
+        version: "17",
+        platform: "Windows 10"
+      },
+
+      Edge16: {
+        base: "SauceLabs",
+        browserName: "MicrosoftEdge",
+        version: "16",
+        platform: "Windows 10"
+      },
+
+      Edge15: {
+        base: "SauceLabs",
+        browserName: "MicrosoftEdge",
+        version: "15",
+        platform: "Windows 10"
+      },
+
+      Edge14: {
+        base: "SauceLabs",
+        browserName: "MicrosoftEdge",
+        version: "14",
+        platform: "Windows 10"
+      },
+
+      Edge13: {
+        base: "SauceLabs",
+        browserName: "MicrosoftEdge",
+        version: "13",
+        platform: "Windows 10"
+      },
+
       IE11: {
         base: "SauceLabs",
         browserName: "Internet Explorer",

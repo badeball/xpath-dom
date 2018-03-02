@@ -7,6 +7,12 @@ env:
   - BROWSERS=Firefox
   - BROWSERS=Chrome
   - BROWSERS=Safari
+  - BROWSERS=Edge18
+  - BROWSERS=Edge17
+  - BROWSERS=Edge16
+  - BROWSERS=Edge15
+  - BROWSERS=Edge14
+  - BROWSERS=Edge13
   - BROWSERS=IE11
   - BROWSERS=IE10
   - BROWSERS=IE9
