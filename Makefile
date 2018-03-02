@@ -12,7 +12,7 @@ test:
 	@$(KARMA) start
 
 test-ci:
-	@$(KARMA) start --browsers $(BROWSERS)
+	@$(KARMA) start --reporters dots,saucelabs --browsers $(BROWSERS)
 
 build:
 	[[ -d dist ]] || mkdir dist
