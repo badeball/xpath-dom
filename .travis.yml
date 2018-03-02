@@ -6,7 +6,6 @@ env:
   - BROWSERS=jsdom
   - BROWSERS=Firefox
   - BROWSERS=Chrome
-  - BROWSERS=Opera
   - BROWSERS=Safari
   - BROWSERS=IE11
   - BROWSERS=IE10

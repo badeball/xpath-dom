@@ -41,12 +41,6 @@ module.exports = function(config) {
         platform: "Windows 7"
       },
 
-      Opera: {
-        base: "SauceLabs",
-        browserName: "Opera",
-        platform: "Windows 7"
-      },
-
       Safari: {
         base: "SauceLabs",
         browserName: "Safari",
