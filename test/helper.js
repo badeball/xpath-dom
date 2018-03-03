@@ -1,6 +1,6 @@
 "use strict";
 
-var assert = require("assert");
+var Assert = require("assert");
 
 var XPathEvaluator = require("../register");
 
@@ -21,15 +21,15 @@ module.exports = {
             className = match[3];
 
         if (tagName) {
-          assert.equal(result.snapshotItem(i).tagName.toLowerCase(), tagName);
+          Assert.equal(result.snapshotItem(i).tagName.toLowerCase(), tagName);
         }
 
         if (idName) {
-          assert.equal(result.snapshotItem(i).id, idName);
+          Assert.equal(result.snapshotItem(i).id, idName);
         }
 
         if (className) {
-          assert.equal(result.snapshotItem(i).className, className);
+          Assert.equal(result.snapshotItem(i).className, className);
         }
       } else {
         match = nodes[i].match(/^(\w+)(?:\(([^\)]*)\))?$/);
@@ -37,15 +37,15 @@ module.exports = {
         var nodeType = match[1],
             nodeValue = match[2];
 
-        assert.equal("#" + nodeType, result.snapshotItem(i).nodeName);
+        Assert.equal("#" + nodeType, result.snapshotItem(i).nodeName);
 
         if (nodeValue) {
-          assert.equal(nodeValue, result.snapshotItem(i).nodeValue);
+          Assert.equal(nodeValue, result.snapshotItem(i).nodeValue);
         }
       }
     }
 
-    assert.equal(result.snapshotLength, nodes.length);
+    Assert.equal(result.snapshotLength, nodes.length);
   },
 
   assertEvaluatesToValue: function (contextNode, expression, value) {
@@ -53,15 +53,15 @@ module.exports = {
 
     switch (result.resultType) {
       case XPathResult.NUMBER_TYPE:
-        assert.equal(value, result.numberValue);
+        Assert.equal(value, result.numberValue);
         break;
 
       case XPathResult.STRING_TYPE:
-        assert.equal(value, result.stringValue);
+        Assert.equal(value, result.stringValue);
         break;
 
       case XPathResult.BOOLEAN_TYPE:
-        assert.equal(value, result.booleanValue);
+        Assert.equal(value, result.booleanValue);
         break;
 
       default:
