@@ -2,6 +2,4 @@ var XPathEvaluator = require("xpath-evaluator");
 
 var XPathDOM = require("./lib/xpath_dom");
 
-XPathEvaluator.setAdapter(XPathDOM);
-
-module.exports = XPathEvaluator;
+module.exports = new XPathEvaluator(XPathDOM);

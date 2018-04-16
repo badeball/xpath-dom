@@ -9,7 +9,7 @@
     "url": "git://github.com/badeball/xpath-dom.git"
   },
   "dependencies": {
-    "xpath-evaluator": "^2.0.0"
+    "xpath-evaluator": "^3.0.0"
   },
   "devDependencies": {
     "babelify": "6.4.0",
