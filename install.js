@@ -1,5 +1,3 @@
-/* eslint-env browser, node */
-
 if (!window.document.evaluate) {
   var XPathEvaluator = require("./register");
 
