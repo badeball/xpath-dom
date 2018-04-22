@@ -1,19 +1,36 @@
 "use strict";
 
+const builtins = require("rollup-plugin-node-builtins");
+const globals = require("rollup-plugin-node-globals");
+const resolve = require("rollup-plugin-node-resolve");
+
 module.exports = function(config) {
   config.set({
-    frameworks: ["browserify", "mocha", "es5-shim"],
+    frameworks: ["mocha", "es5-shim"],
 
     files: [
       "test/**/*_test.js"
     ],
 
     preprocessors: {
-      "test/**/*_test.js": "browserify"
+      "test/**/*_test.js": ["rollup", "babel"]
     },
 
-    browserify: {
-      debug: true
+    rollupPreprocessor: {
+      output: {
+        format: "iife"
+      },
+      plugins: [
+        builtins(),
+        globals(),
+        resolve()
+      ]
+    },
+
+    babelPreprocessor: {
+      options: {
+        presets: ["es2015"]
+      }
     },
 
     client: {

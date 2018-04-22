@@ -1,8 +1,6 @@
-"use strict";
+import { assertEvaluatesToNodeSet as unboundAssertEvaluatesToNodeSet, createDocument, IS_IE9 } from "./helper";
 
-var Helper = require("./helper");
-
-var document = Helper.createDocument(
+var document = createDocument(
   "<html>",
   "  <head>",
   "    <title>Title</title>",
@@ -52,7 +50,7 @@ var document = Helper.createDocument(
   "</html>"
 );
 
-var assertEvaluatesToNodeSet = Helper.assertEvaluatesToNodeSet.bind(null, document.body);
+var assertEvaluatesToNodeSet = unboundAssertEvaluatesToNodeSet.bind(null, document.body);
 
 suite("XPathDOM", function () {
   suite("basic functional", function () {
@@ -372,7 +370,7 @@ suite("XPathDOM", function () {
     });
 
     test("79", function () {
-      var expected = Helper.IS_IE9 ?
+      var expected = IS_IE9 ?
         ["comment(blockquoteComment)", "comment( hoge)"] :
         ["comment(blockquoteComment)", "comment(?pi hoge ?)"];
 
@@ -380,7 +378,7 @@ suite("XPathDOM", function () {
     });
 
     test("80", function () {
-      var expected = Helper.IS_IE9 ?
+      var expected = IS_IE9 ?
         ["comment(blockquoteComment)", "comment( hoge)"] :
         ["comment(blockquoteComment)", "comment(?pi hoge ?)"];
 

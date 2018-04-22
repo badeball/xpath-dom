@@ -1,8 +1,6 @@
-"use strict";
+import { assertEvaluatesToNodeSet as unboundAssertEvaluatesToNodeSet, createDocument } from "./helper";
 
-var Helper = require("./helper");
-
-var document = Helper.createDocument(
+var document = createDocument(
   "<html>",
   "  <body>",
   "    <svg id='svg' xmlns='http://www.w3.org/2000/svg' version='1.1' viewBox='0 0 1000 50'>",
@@ -14,7 +12,7 @@ var document = Helper.createDocument(
   "</html>"
 );
 
-var assertEvaluatesToNodeSet = Helper.assertEvaluatesToNodeSet.bind(null, document);
+var assertEvaluatesToNodeSet = unboundAssertEvaluatesToNodeSet.bind(null, document);
 
 // TODO: Use a namespace prefix once support for namespaces are implemented.
 

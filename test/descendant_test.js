@@ -1,8 +1,12 @@
-"use strict";
+import { assertEvaluatesToNodeSet as unboundAssertEvaluatesToNodeSet, createDocument } from "./helper";
 
-var Helper = require("./helper");
+/**
+ * Several of these tests relies on there not being any text nodes within the document. Hence the
+ * mangled indenting.
+ */
 
-var document = Helper.createDocument(
+/* eslint-disable indent */
+var document = createDocument(
   "<html>",
     "<head>",
       "<title>title</title>",
@@ -12,8 +16,9 @@ var document = Helper.createDocument(
     "</body>",
   "</html>"
 );
+/* eslint-enable indent */
 
-var assertEvaluatesToNodeSet = Helper.assertEvaluatesToNodeSet.bind(null, document);
+var assertEvaluatesToNodeSet = unboundAssertEvaluatesToNodeSet.bind(null, document);
 
 suite("XPathDOM", function () {
   suite("descendant", function () {

@@ -1,5 +1,11 @@
-var XPathEvaluator = require("xpath-evaluator");
+import XPathEvaluator, { XPathResult } from "xpath-evaluator";
 
-var XPathDOM = require("./lib/xpath_dom");
+import XPathDOM from "./lib/xpath_dom";
 
-module.exports = new XPathEvaluator(XPathDOM);
+var evaluator = new XPathEvaluator(XPathDOM);
+
+export var evaluate = evaluator.evaluate.bind(evaluator);
+export var createExpression = evaluator.createExpression.bind(evaluator);
+export var createNSResolver = evaluator.createNSResolver.bind(evaluator);
+
+export { XPathResult };
