@@ -4,6 +4,18 @@ const builtins = require("rollup-plugin-node-builtins");
 const globals = require("rollup-plugin-node-globals");
 const resolve = require("rollup-plugin-node-resolve");
 
+const resolveModuleToTestAgainst = {
+  resolveId(id) {
+    if (id === "xpath-dom") {
+      if (process.env.TEST_AGAINST_BUILD === "1") {
+        return "test/export_shims_helper.js";
+      } else {
+        return "register.js";
+      }
+    }
+  }
+};
+
 module.exports = function(config) {
   config.set({
     frameworks: ["mocha", "es5-shim"],
@@ -23,7 +35,8 @@ module.exports = function(config) {
       plugins: [
         builtins(),
         globals(),
-        resolve()
+        resolve(),
+        resolveModuleToTestAgainst
       ]
     },
 

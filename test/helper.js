@@ -1,6 +1,6 @@
 import Assert from "assert";
 
-import { evaluate, XPathResult } from "../register";
+import { evaluate, XPathResult } from "xpath-dom";
 
 export function assertEvaluatesToNodeSet (contextNode, expression, nodes) {
   var result = evaluate(expression, contextNode, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
