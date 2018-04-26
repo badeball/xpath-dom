@@ -8,7 +8,7 @@ const resolveModuleToTestAgainst = {
   resolveId(id) {
     if (id === "xpath-dom") {
       if (process.env.TEST_AGAINST_BUILD === "1") {
-        return "test/export_shims_helper.js";
+        return "test/unit/export_shims_helper.js";
       } else {
         return "register.js";
       }
@@ -21,11 +21,11 @@ module.exports = function(config) {
     frameworks: ["mocha", "es5-shim"],
 
     files: [
-      "test/**/*_test.js"
+      "test/unit/**/*_test.js"
     ],
 
     preprocessors: {
-      "test/**/*_test.js": ["rollup", "babel"]
+      "test/unit/**/*_test.js": ["rollup", "babel"]
     },
 
     rollupPreprocessor: {

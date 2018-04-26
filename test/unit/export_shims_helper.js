@@ -1,5 +1,5 @@
 import "./remove_existing_implementation";
-import "../dist/xpath-dom.shim.min";
+import "../../dist/xpath-dom.shim.min";
 
 export const evaluate = window.document.evaluate;
 export const createExpression = window.document.createExpression;
