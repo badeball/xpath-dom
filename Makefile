@@ -14,9 +14,11 @@ test:
 test-ci:
 	@$(KARMA) start --reporters dots,saucelabs --browsers $(BROWSERS)
 
+test-perf:
+	@node --no-warnings --experimental-modules test/perf/runner.mjs
+
 build:
 	$(BROWSERIFY) install.js -s xpath-dom -o dist/xpath-dom.shim.js
 	$(UGLIFYJS) dist/xpath-dom.shim.js --compress warnings=false --mangle --output dist/xpath-dom.shim.min.js
 
-
-.PHONY: lint test
+.PHONY: lint test test-ci test-perf build
