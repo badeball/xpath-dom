@@ -20,5 +20,17 @@ env:
 matrix:
   allow_failures:
     - env: BROWSERS=IE8
-before_script: make lint
+cache:
+  directories:
+    - node_modules
+stages:
+  - ensure built
+  - lint
+  - test
+jobs:
+  include:
+    - stage: ensure built
+      script: make build && [ -z "$(git status -s dist/)" ]
+    - stage: lint
+      script: make lint
 script: make test-ci
