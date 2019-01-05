@@ -25,7 +25,7 @@ module.exports = function(config) {
     ],
 
     preprocessors: {
-      "test/unit/**/*_test.js": ["rollup", "babel"]
+      "test/unit/**/*_test.js": ["rollup"]
     },
 
     rollupPreprocessor: {
