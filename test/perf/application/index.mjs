@@ -3,6 +3,10 @@ import path from "path";
 
 const application = express();
 
+application.get("/lodash.js", function (request, response) {
+  response.sendFile(path.resolve(path.join("node_modules", "lodash", "lodash.js")));
+});
+
 application.get("/benchmark.js", function (request, response) {
   response.sendFile(path.resolve(path.join("node_modules", "benchmark", "benchmark.js")));
 });
