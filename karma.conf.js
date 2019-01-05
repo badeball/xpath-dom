@@ -1,8 +1,7 @@
 "use strict";
 
-const builtins = require("rollup-plugin-node-builtins");
-const globals = require("rollup-plugin-node-globals");
 const resolve = require("rollup-plugin-node-resolve");
+const commonjs = require("rollup-plugin-commonjs");
 
 const resolveModuleToTestAgainst = {
   resolveId(id) {
@@ -33,9 +32,11 @@ module.exports = function(config) {
         format: "iife"
       },
       plugins: [
-        builtins(),
-        globals(),
-        resolve(),
+        resolve({
+          browser: true,
+          preferBuiltins: false
+        }),
+        commonjs(),
         resolveModuleToTestAgainst
       ]
     },
