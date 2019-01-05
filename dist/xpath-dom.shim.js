@@ -18,7 +18,7 @@ if (!window.document.evaluate) {
   }
 }
 
-},{"./register":106}],2:[function(require,module,exports){
+},{"./register":108}],2:[function(require,module,exports){
 "use strict";
 
 var DocumentPosition = {
@@ -183,10 +183,6 @@ XPathDOM.prototype.toString = function () {
 module.exports = XPathDOM;
 
 },{}],3:[function(require,module,exports){
-/* eslint-env node */
-
-"use strict";
-
 module.exports = {
   ANCESTOR: "ancestor",
   ANCESTOR_OR_SELF: "ancestor-or-self",
@@ -200,22 +196,10 @@ module.exports = {
   PARENT: "parent",
   PRECEDING: "preceding",
   PRECEDING_SIBLING: "preceding-sibling",
-  SELF: "self",
-
-  isValidAxisSpecifier: function (axisSpecifier) {
-    for (var property in this) {
-      if (this.hasOwnProperty(property) && this[property] === axisSpecifier) {
-        return true;
-      }
-    }
-
-    return false;
-  }
+  SELF: "self"
 };
 
 },{}],4:[function(require,module,exports){
-/* eslint-env node */
-
 module.exports = {
   ABSOLUTE_LOCATION_PATH: "absolute-location-path",
   ADDITIVE: "additive",
@@ -242,37 +226,15 @@ module.exports = {
 };
 
 },{}],5:[function(require,module,exports){
-/* eslint-env node */
-
-"use strict";
-
 module.exports = {
   COMMENT: "comment",
   NODE: "node",
   PROCESSING_INSTRUCTION: "processing-instruction",
-  TEXT: "text",
-
-  isValidNodeType: function (nodeType) {
-    for (var property in this) {
-      if (this.hasOwnProperty(property) && this[property] === nodeType) {
-        return true;
-      }
-    }
-
-    return false;
-  }
+  TEXT: "text"
 };
 
 },{}],6:[function(require,module,exports){
-/* eslint-env node */
-
 "use strict";
-
-function AbsoluteLocationPath (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = AbsoluteLocationPath;
 
 var AxisSpecifier = require("../axis_specifier");
 
@@ -282,173 +244,141 @@ var NodeType = require("../node_type");
 
 var Step = require("./step");
 
-AbsoluteLocationPath.prototype.parse = function () {
-  var absoluteLocation = {
-    type: ExprType.ABSOLUTE_LOCATION_PATH
-  };
+module.exports = {
+  parse: function (rootParser, lexer) {
+    var absoluteLocation = {
+      type: ExprType.ABSOLUTE_LOCATION_PATH
+    };
 
-  while (!this.lexer.empty() && this.lexer.peak()[0] === "/") {
-    if (!absoluteLocation.steps) {
-      absoluteLocation.steps = [];
-    }
-
-    if (this.lexer.next() === "/") {
-      var next = this.lexer.peak();
-
-      if (!this.lexer.empty() && (next === "." || next === ".." || next === "@" || next === "*" || /(?![0-9])[\w]/.test(next))) {
-        absoluteLocation.steps.push(new Step(this.lexer).parse());
+    while (!lexer.empty() && lexer.peak()[0] === "/") {
+      if (!absoluteLocation.steps) {
+        absoluteLocation.steps = [];
       }
-    } else {
-      absoluteLocation.steps.push({
-        axis: AxisSpecifier.DESCENDANT_OR_SELF,
-        test: {
-          type: NodeType.NODE
+
+      if (lexer.next() === "/") {
+        if (Step.isValidOp(lexer)) {
+          absoluteLocation.steps.push(Step.parse(rootParser, lexer));
         }
-      });
+      } else {
+        absoluteLocation.steps.push({
+          axis: AxisSpecifier.DESCENDANT_OR_SELF,
+          test: {
+            type: NodeType.NODE
+          }
+        });
 
-      absoluteLocation.steps.push(new Step(this.lexer).parse());
+        absoluteLocation.steps.push(Step.parse(rootParser, lexer));
+      }
     }
-  }
 
-  return absoluteLocation;
+    return absoluteLocation;
+  }
 };
 
 },{"../axis_specifier":3,"../expr_type":4,"../node_type":5,"./step":22}],7:[function(require,module,exports){
-/* eslint-env node */
-
 "use strict";
-
-function AdditiveExpr (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = AdditiveExpr;
 
 var ExprType = require("../expr_type");
 
 var MultiplicativeExpr = require("./multiplicative_expr");
 
-AdditiveExpr.prototype.parse = function () {
-  var lhs = new MultiplicativeExpr(this.lexer).parse();
+module.exports = {
+  parse: function (rootParser, lexer) {
+    var lhs = MultiplicativeExpr.parse(rootParser, lexer);
 
-  var additiveTypes = {
-    "+": ExprType.ADDITIVE,
-    "-": ExprType.SUBTRACTIVE
-  };
-
-  if (additiveTypes.hasOwnProperty(this.lexer.peak())) {
-    var op = this.lexer.next();
-
-    var rhs = new AdditiveExpr(this.lexer).parse();
-
-    return {
-      type: additiveTypes[op],
-      lhs: lhs,
-      rhs: rhs
+    var additiveTypes = {
+      "+": ExprType.ADDITIVE,
+      "-": ExprType.SUBTRACTIVE
     };
-  } else {
-    return lhs;
+
+    if (additiveTypes.hasOwnProperty(lexer.peak())) {
+      var op = lexer.next();
+
+      var rhs = module.exports.parse(rootParser, lexer);
+
+      return {
+        type: additiveTypes[op],
+        lhs: lhs,
+        rhs: rhs
+      };
+    } else {
+      return lhs;
+    }
   }
 };
 
 },{"../expr_type":4,"./multiplicative_expr":14}],8:[function(require,module,exports){
-/* eslint-env node */
-
 "use strict";
-
-function AndExpr (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = AndExpr;
 
 var ExprType = require("../expr_type");
 
 var EqualityExpr = require("./equality_expr");
 
-AndExpr.prototype.parse = function () {
-  var lhs = new EqualityExpr(this.lexer).parse();
+module.exports = {
+  parse: function (rootParser, lexer) {
+    var lhs = EqualityExpr.parse(rootParser, lexer);
 
-  if (this.lexer.peak() === "and") {
-    this.lexer.next();
+    if (lexer.peak() === "and") {
+      lexer.next();
 
-    var rhs = new AndExpr(this.lexer).parse();
+      var rhs = module.exports.parse(rootParser, lexer);
 
-    return {
-      type: ExprType.AND,
-      lhs: lhs,
-      rhs: rhs
-    };
-  } else {
-    return lhs;
+      return {
+        type: ExprType.AND,
+        lhs: lhs,
+        rhs: rhs
+      };
+    } else {
+      return lhs;
+    }
   }
 };
 
 },{"../expr_type":4,"./equality_expr":9}],9:[function(require,module,exports){
-/* eslint-env node */
-
 "use strict";
-
-function EqualityExpr (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = EqualityExpr;
 
 var ExprType = require("../expr_type");
 
 var RelationalExpr = require("./relational_expr");
 
-EqualityExpr.prototype.parse = function () {
-  var lhs = new RelationalExpr(this.lexer).parse();
+module.exports = {
+  parse: function (rootParser, lexer) {
+    var lhs = RelationalExpr.parse(rootParser, lexer);
 
-  var equalityTypes = {
-    "=": ExprType.EQUALITY,
-    "!=": ExprType.INEQUALITY
-  };
-
-  if (equalityTypes.hasOwnProperty(this.lexer.peak())) {
-    var op = this.lexer.next();
-
-    var rhs = new EqualityExpr(this.lexer).parse();
-
-    return {
-      type: equalityTypes[op],
-      lhs: lhs,
-      rhs: rhs
+    var equalityTypes = {
+      "=": ExprType.EQUALITY,
+      "!=": ExprType.INEQUALITY
     };
-  } else {
-    return lhs;
+
+    if (equalityTypes.hasOwnProperty(lexer.peak())) {
+      var op = lexer.next();
+
+      var rhs = module.exports.parse(rootParser, lexer);
+
+      return {
+        type: equalityTypes[op],
+        lhs: lhs,
+        rhs: rhs
+      };
+    } else {
+      return lhs;
+    }
   }
 };
 
 },{"../expr_type":4,"./relational_expr":20}],10:[function(require,module,exports){
-/* eslint-env node */
-
 "use strict";
-
-function Expr (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = Expr;
 
 var OrExpr = require("./or_expr");
 
-Expr.prototype.parse = function () {
-  return new OrExpr(this.lexer).parse();
+module.exports = {
+  parse: function (lexer) {
+    return OrExpr.parse(module.exports, lexer);
+  }
 };
 
 },{"./or_expr":16}],11:[function(require,module,exports){
-/* eslint-env node */
-
 "use strict";
-
-function FilterExpr (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = FilterExpr;
 
 var ExprType = require("../expr_type");
 
@@ -456,228 +386,200 @@ var Predicate = require("./predicate");
 
 var PrimaryExpr = require("./primary_expr");
 
-FilterExpr.prototype.parse = function () {
-  var primary = new PrimaryExpr(this.lexer).parse();
+module.exports = {
+  parse: function (rootParser, lexer) {
+    var primary = PrimaryExpr.parse(rootParser, lexer);
 
-  if (this.lexer.peak() === "[") {
-    var filter = {
-      type: ExprType.FILTER,
-      primary: primary,
-      predicates: []
-    };
+    if (lexer.peak() === "[") {
+      var filter = {
+        type: ExprType.FILTER,
+        primary: primary,
+        predicates: []
+      };
 
-    while (this.lexer.peak() === "[") {
-      filter.predicates.push(new Predicate(this.lexer).parse());
+      while (lexer.peak() === "[") {
+        filter.predicates.push(Predicate.parse(rootParser, lexer));
+      }
+
+      return filter;
+    } else {
+      return primary;
     }
+  },
 
-    return filter;
-  } else {
-    return primary;
+  isValidOp: function (lexer) {
+    return PrimaryExpr.isValidOp(lexer);
   }
-};
-
-FilterExpr.isValidOp = function (lexer) {
-  return PrimaryExpr.isValidOp(lexer);
 };
 
 },{"../expr_type":4,"./predicate":18,"./primary_expr":19}],12:[function(require,module,exports){
-/* eslint-env node */
-
 "use strict";
-
-function FunctionCall (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = FunctionCall;
 
 var ExprType = require("../expr_type");
 
-var Expr = require("./expr");
+module.exports = {
+  parse: function (rootParser, lexer) {
+    var functionCall = {
+      type: ExprType.FUNCTION_CALL,
+      name: lexer.next()
+    };
 
-FunctionCall.prototype.parse = function () {
-  var functionCall = {
-    type: ExprType.FUNCTION_CALL,
-    name: this.lexer.next()
-  };
+    lexer.next();
 
-  this.lexer.next();
+    if (lexer.peak() === ")") {
+      lexer.next();
+    } else {
+      functionCall.args = [];
 
-  if (this.lexer.peak() === ")") {
-    this.lexer.next();
-  } else {
-    functionCall.args = [];
+      while (lexer.peak() !== ")") {
+        functionCall.args.push(rootParser.parse(lexer));
 
-    while (this.lexer.peak() !== ")") {
-      functionCall.args.push((new Expr(this.lexer)).parse());
-
-      if (this.lexer.peak() === ",") {
-        this.lexer.next();
+        if (lexer.peak() === ",") {
+          lexer.next();
+        }
       }
+
+      lexer.next();
     }
 
-    this.lexer.next();
+    return functionCall;
   }
-
-  return functionCall;
 };
 
-},{"../expr_type":4,"./expr":10}],13:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../expr_type":4}],13:[function(require,module,exports){
 "use strict";
-
-function LocationPath (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = LocationPath;
 
 var AbsoluteLocationPath = require("./absolute_location_path");
 
 var RelativeLocationPath = require("./relative_location_path");
 
-LocationPath.prototype.parse = function () {
-  var ch = this.lexer.peak()[0];
+module.exports = {
+  parse: function (rootParser, lexer) {
+    var token = lexer.peak(),
+        ch = token && token[0];
 
-  if (ch === "/") {
-    return new AbsoluteLocationPath(this.lexer).parse();
-  } else {
-    return new RelativeLocationPath(this.lexer).parse();
+    if (ch === "/") {
+      return AbsoluteLocationPath.parse(rootParser, lexer);
+    } else {
+      return RelativeLocationPath.parse(rootParser, lexer);
+    }
   }
 };
 
 },{"./absolute_location_path":6,"./relative_location_path":21}],14:[function(require,module,exports){
-/* eslint-env node */
-
 "use strict";
-
-function MultiplicativeExpr (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = MultiplicativeExpr;
 
 var ExprType = require("../expr_type");
 
 var UnaryExpr = require("./unary_expr");
 
-MultiplicativeExpr.prototype.parse = function () {
-  var lhs = new UnaryExpr(this.lexer).parse();
+module.exports = {
+  parse: function (rootParser, lexer) {
+    var lhs = UnaryExpr.parse(rootParser, lexer);
 
-  var multiplicativeTypes = {
-    "*": ExprType.MULTIPLICATIVE,
-    "div": ExprType.DIVISIONAL,
-    "mod": ExprType.MODULUS
-  };
-
-  if (multiplicativeTypes.hasOwnProperty(this.lexer.peak())) {
-    var op = this.lexer.next();
-
-    var rhs = new MultiplicativeExpr(this.lexer).parse();
-
-    return {
-      type: multiplicativeTypes[op],
-      lhs: lhs,
-      rhs: rhs
+    var multiplicativeTypes = {
+      "*": ExprType.MULTIPLICATIVE,
+      "div": ExprType.DIVISIONAL,
+      "mod": ExprType.MODULUS
     };
-  } else {
-    return lhs;
+
+    if (multiplicativeTypes.hasOwnProperty(lexer.peak())) {
+      var op = lexer.next();
+
+      var rhs = module.exports.parse(rootParser, lexer);
+
+      return {
+        type: multiplicativeTypes[op],
+        lhs: lhs,
+        rhs: rhs
+      };
+    } else {
+      return lhs;
+    }
   }
 };
 
 },{"../expr_type":4,"./unary_expr":23}],15:[function(require,module,exports){
-/* eslint-env node */
-
 "use strict";
-
-function NodeTest (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = NodeTest;
 
 var NodeType = require("../node_type");
 
-NodeTest.prototype.parse = function () {
-  if (this.lexer.peak() === "*") {
-    this.lexer.next();
+var NodeTypeValidator = require("../validators/node_type");
+
+module.exports = {
+  parse: function (rootParser, lexer) {
+    if (lexer.peak() === "*") {
+      lexer.next();
+
+      return {
+        name: "*"
+      };
+    }
+
+    if (lexer.peak(1) === "(") {
+      if (NodeTypeValidator.isValid(lexer.peak())) {
+        var test = {
+          type: lexer.next()
+        };
+
+        lexer.next();
+
+        if (test.type === NodeType.PROCESSING_INSTRUCTION) {
+          var token = lexer.peak(),
+              ch = token && token[0];
+
+          if (ch === "\"" || ch === "'") {
+            test.name = lexer.next().slice(1, -1);
+          }
+        }
+
+        if (lexer.peak() !== ")") {
+          throw new Error("Invalid token at position " + lexer.position() + ", expected closing parenthesis");
+        } else {
+          lexer.next();
+        }
+
+        return test;
+      } else {
+        throw new Error("Invalid node type at position " + lexer.position());
+      }
+    }
 
     return {
-      name: "*"
+      name: lexer.next()
     };
   }
-
-  if (this.lexer.peak(1) === "(") {
-    if (NodeType.isValidNodeType(this.lexer.peak())) {
-      var test = {
-        type: this.lexer.next()
-      };
-
-      this.lexer.next();
-
-      if (this.lexer.peak() === ")") {
-        this.lexer.next();
-      } else {
-        test.name = this.lexer.next();
-
-        this.lexer.next();
-      }
-
-      return test;
-    } else {
-      throw new Error("Unexpected token " + this.lexer.peak());
-    }
-  }
-
-  return {
-    name: this.lexer.next()
-  };
 };
 
-},{"../node_type":5}],16:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../node_type":5,"../validators/node_type":26}],16:[function(require,module,exports){
 "use strict";
-
-function OrExpr (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = OrExpr;
 
 var ExprType = require("../expr_type");
 
 var AndExpr = require("./and_expr");
 
-OrExpr.prototype.parse = function () {
-  var lhs = new AndExpr(this.lexer).parse();
+module.exports = {
+  parse: function (rootParser, lexer) {
+    var lhs = AndExpr.parse(rootParser, lexer);
 
-  if (this.lexer.peak() === "or") {
-    this.lexer.next();
+    if (lexer.peak() === "or") {
+      lexer.next();
 
-    var rhs = new OrExpr(this.lexer).parse();
+      var rhs = module.exports.parse(rootParser, lexer);
 
-    return {
-      type: ExprType.OR,
-      lhs: lhs,
-      rhs: rhs
-    };
-  } else {
-    return lhs;
+      return {
+        type: ExprType.OR,
+        lhs: lhs,
+        rhs: rhs
+      };
+    } else {
+      return lhs;
+    }
   }
 };
 
 },{"../expr_type":4,"./and_expr":8}],17:[function(require,module,exports){
-/* eslint-env node */
-
 "use strict";
-
-function PathExpr (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = PathExpr;
 
 var AxisSpecifier = require("../axis_specifier");
 
@@ -691,189 +593,165 @@ var LocationPath = require("./location_path");
 
 var Step = require("./step");
 
-PathExpr.prototype.parse = function () {
-  if (FilterExpr.isValidOp(this.lexer)) {
-    var filter = new FilterExpr(this.lexer).parse();
+module.exports = {
+  parse: function (rootParser, lexer) {
+    if (FilterExpr.isValidOp(lexer)) {
+      var filter = FilterExpr.parse(rootParser, lexer);
 
-    if (!this.lexer.empty() && this.lexer.peak()[0] === "/") {
-      var path = {
-        type: ExprType.PATH,
-        filter: filter,
-        steps: []
-      };
+      if (!lexer.empty() && lexer.peak()[0] === "/") {
+        var path = {
+          type: ExprType.PATH,
+          filter: filter,
+          steps: []
+        };
 
-      while (!this.lexer.empty() && this.lexer.peak()[0] === "/") {
-        if (this.lexer.next() === "//") {
-          path.steps.push({
-            axis: AxisSpecifier.DESCENDANT_OR_SELF,
-            test: {
-              type: NodeType.NODE
-            }
-          });
+        while (!lexer.empty() && lexer.peak()[0] === "/") {
+          if (lexer.next() === "//") {
+            path.steps.push({
+              axis: AxisSpecifier.DESCENDANT_OR_SELF,
+              test: {
+                type: NodeType.NODE
+              }
+            });
+          }
+
+          path.steps.push(Step.parse(rootParser, lexer));
         }
 
-        path.steps.push(new Step(this.lexer).parse());
+        return path;
+      } else {
+        return filter;
       }
-
-      return path;
     } else {
-      return filter;
+      return LocationPath.parse(rootParser, lexer);
     }
-  } else {
-    return new LocationPath(this.lexer).parse();
   }
 };
 
 },{"../axis_specifier":3,"../expr_type":4,"../node_type":5,"./filter_expr":11,"./location_path":13,"./step":22}],18:[function(require,module,exports){
-/* eslint-env node */
-
 "use strict";
 
-function Predicate (lexer) {
-  this.lexer = lexer;
-}
+module.exports = {
+  parse: function (rootParser, lexer) {
+    lexer.next();
 
-module.exports = Predicate;
+    var predicate = rootParser.parse(lexer);
 
-var Expr = require("./expr");
+    if (lexer.peak() === "]") {
+      lexer.next();
+    } else {
+      throw new Error("Invalid token at position " + lexer.position() + ", expected closing bracket");
+    }
 
-Predicate.prototype.parse = function () {
-  this.lexer.next();
-
-  var predicate = new Expr(this.lexer).parse();
-
-  if (this.lexer.next() !== "]") {
-    throw new Error("Unclosed brackets");
+    return predicate;
   }
-
-  return predicate;
 };
 
-},{"./expr":10}],19:[function(require,module,exports){
-/* eslint-env node */
-
+},{}],19:[function(require,module,exports){
 "use strict";
-
-function PrimaryExpr (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = PrimaryExpr;
 
 var ExprType = require("../expr_type");
 
-var NodeType = require("../node_type");
-
-var Expr = require("./expr");
+var NodeTypeValidator = require("../validators/node_type");
 
 var FunctionCall = require("./function_call");
 
-PrimaryExpr.prototype.parse = function () {
-  var token = this.lexer.peak(),
-      ch = token[0];
+module.exports = {
+  parse: function (rootParser, lexer) {
+    var token = lexer.peak(),
+        ch = token && token[0];
 
-  if (ch === "(") {
-    this.lexer.next();
+    if (ch === "(") {
+      lexer.next();
 
-    var expr = new Expr(this.lexer).parse();
+      var expr = rootParser.parse(lexer);
 
-    if (this.lexer.next() !== ")") {
-      throw new Error("Unclosed parentheses");
+      if (lexer.peak() === ")") {
+        lexer.next();
+      } else {
+        throw new Error("Invalid token at position " + lexer.position() + ", expected closing parenthesis");
+      }
+
+      return expr;
     }
 
-    return expr;
-  }
+    if (ch === "\"" || ch === "'") {
+      lexer.next();
 
-  if (ch === "\"" || ch === "'") {
-    this.lexer.next();
+      return {
+        type: ExprType.LITERAL,
+        string: token.slice(1, -1)
+      };
+    }
 
-    return {
-      type: ExprType.LITERAL,
-      string: token.slice(1, -1)
-    };
-  }
+    if (ch === "$") {
+      throw Error("Variable reference are not implemented");
+    }
 
-  if (ch === "$") {
-    throw Error("Variable reference are not implemented");
-  }
+    if (/^\d+$/.test(token) || /^(\d+)?\.\d+$/.test(token)) {
+      lexer.next();
 
-  if (/^\d+$/.test(token) || /^(\d+)?\.\d+$/.test(token)) {
-    this.lexer.next();
+      return {
+        type: ExprType.NUMBER,
+        number: parseFloat(token)
+      };
+    }
 
-    return {
-      type: ExprType.NUMBER,
-      number: parseFloat(token)
-    };
-  }
+    if (lexer.peak(1) === "(" && !NodeTypeValidator.isValid(lexer.peak())) {
+      return FunctionCall.parse(rootParser, lexer);
+    }
+  },
 
-  if (this.lexer.peak(1) === "(" && !NodeType.isValidNodeType(this.lexer.peak())) {
-    return new FunctionCall(this.lexer).parse();
+  isValidOp: function (lexer) {
+    var token = lexer.peak(),
+        ch = token && token[0];
+
+    return ch === "(" ||
+      ch === "\"" ||
+      ch === "'" ||
+      ch === "$" ||
+      /^\d+$/.test(token) ||
+      /^(\d+)?\.\d+$/.test(token) ||
+      (lexer.peak(1) === "(" && !NodeTypeValidator.isValid(lexer.peak()));
   }
 };
 
-PrimaryExpr.isValidOp = function (lexer) {
-  var token = lexer.peak(),
-      ch = token[0];
-
-  return ch === "(" ||
-    ch === "\"" ||
-    ch === "'" ||
-    ch === "$" ||
-    /^\d+$/.test(token) ||
-    /^(\d+)?\.\d+$/.test(token) ||
-    (lexer.peak(1) === "(" && !NodeType.isValidNodeType(lexer.peak()));
-};
-
-},{"../expr_type":4,"../node_type":5,"./expr":10,"./function_call":12}],20:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../expr_type":4,"../validators/node_type":26,"./function_call":12}],20:[function(require,module,exports){
 "use strict";
-
-function RelationalExpr (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = RelationalExpr;
 
 var ExprType = require("../expr_type");
 
 var AdditiveExpr = require("./additive_expr");
 
-RelationalExpr.prototype.parse = function () {
-  var lhs = new AdditiveExpr(this.lexer).parse();
+module.exports = {
+  parse: function (rootParser, lexer) {
+    var lhs = AdditiveExpr.parse(rootParser, lexer);
 
-  var relationalTypes = {
-    "<": ExprType.LESS_THAN,
-    ">": ExprType.GREATER_THAN,
-    "<=": ExprType.LESS_THAN_OR_EQUAL,
-    ">=": ExprType.GREATER_THAN_OR_EQUAL
-  };
-
-  if (relationalTypes.hasOwnProperty(this.lexer.peak())) {
-    var op = this.lexer.next();
-
-    var rhs = new RelationalExpr(this.lexer).parse();
-
-    return {
-      type: relationalTypes[op],
-      lhs: lhs,
-      rhs: rhs
+    var relationalTypes = {
+      "<": ExprType.LESS_THAN,
+      ">": ExprType.GREATER_THAN,
+      "<=": ExprType.LESS_THAN_OR_EQUAL,
+      ">=": ExprType.GREATER_THAN_OR_EQUAL
     };
-  } else {
-    return lhs;
+
+    if (relationalTypes.hasOwnProperty(lexer.peak())) {
+      var op = lexer.next();
+
+      var rhs = module.exports.parse(rootParser, lexer);
+
+      return {
+        type: relationalTypes[op],
+        lhs: lhs,
+        rhs: rhs
+      };
+    } else {
+      return lhs;
+    }
   }
 };
 
 },{"../expr_type":4,"./additive_expr":7}],21:[function(require,module,exports){
-/* eslint-env node */
-
 "use strict";
-
-function RelativeLocationPath (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = RelativeLocationPath;
 
 var AxisSpecifier = require("../axis_specifier");
 
@@ -883,43 +761,37 @@ var NodeType = require("../node_type");
 
 var Step = require("./step");
 
-RelativeLocationPath.prototype.parse = function () {
-  var relativeLocation = {
-    type: ExprType.RELATIVE_LOCATION_PATH
-  };
+module.exports = {
+  parse: function (rootParser, lexer) {
+    var relativeLocation = {
+      type: ExprType.RELATIVE_LOCATION_PATH
+    };
 
-  relativeLocation.steps = [new Step(this.lexer).parse()];
+    relativeLocation.steps = [Step.parse(rootParser, lexer)];
 
-  while (!this.lexer.empty() && this.lexer.peak()[0] === "/") {
-    if (this.lexer.next() === "/") {
-      relativeLocation.steps.push(new Step(this.lexer).parse());
-    } else {
-      relativeLocation.steps.push({
+    while (!lexer.empty() && lexer.peak()[0] === "/") {
+      if (lexer.next() === "//") {
+        relativeLocation.steps.push({
           axis: AxisSpecifier.DESCENDANT_OR_SELF,
           test: {
             type: NodeType.NODE
           }
         });
+      }
 
-      relativeLocation.steps.push(new Step(this.lexer).parse());
+      relativeLocation.steps.push(Step.parse(rootParser, lexer));
     }
-  }
 
-  return relativeLocation;
+    return relativeLocation;
+  }
 };
 
 },{"../axis_specifier":3,"../expr_type":4,"../node_type":5,"./step":22}],22:[function(require,module,exports){
-/* eslint-env node */
-
 "use strict";
 
-function Step (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = Step;
-
 var AxisSpecifier = require("../axis_specifier");
+
+var AxisSpecifierValidator = require("../validators/axis_specifier");
 
 var NodeType = require("../node_type");
 
@@ -927,122 +799,156 @@ var NodeTest = require("./node_test");
 
 var Predicate = require("./predicate");
 
-Step.prototype.parse = function () {
-  var step = {};
+module.exports = {
+  parse: function (rootParser, lexer) {
+    var step = {};
 
-  if (this.lexer.peak(1) === "::") {
-    var axisSpecifier = this.lexer.next();
+    if (lexer.peak(1) === "::") {
+      if (AxisSpecifierValidator.isValid(lexer.peak())) {
+        step.axis = lexer.next();
 
-    this.lexer.next();
+        lexer.next();
+      } else {
+        throw new Error("Invalid axis specifier at position " + lexer.position());
+      }
+    } else if (lexer.peak() === "@") {
+      lexer.next();
 
-    if (AxisSpecifier.isValidAxisSpecifier(axisSpecifier)) {
-      step.axis = axisSpecifier;
+      step.axis = AxisSpecifier.ATTRIBUTE;
+    } else if (lexer.peak() === "..") {
+      lexer.next();
+
+      return {
+        axis: AxisSpecifier.PARENT,
+        test: {
+          type: NodeType.NODE
+        }
+      };
+    } else if (lexer.peak() === ".") {
+      lexer.next();
+
+      return {
+        axis: AxisSpecifier.SELF,
+        test: {
+          type: NodeType.NODE
+        }
+      };
     } else {
-      throw new Error("Unexpected token " + axisSpecifier);
-    }
-  } else if (this.lexer.peak() === "@") {
-    this.lexer.next();
-
-    step.axis = AxisSpecifier.ATTRIBUTE;
-  } else if (this.lexer.peak() === "..") {
-    this.lexer.next();
-
-    return {
-      axis: AxisSpecifier.PARENT,
-      test: {
-        type: NodeType.NODE
-      }
-    };
-  } else if (this.lexer.peak() === ".") {
-    this.lexer.next();
-
-    return {
-      axis: AxisSpecifier.SELF,
-      test: {
-        type: NodeType.NODE
-      }
-    };
-  } else {
-    step.axis = AxisSpecifier.CHILD;
-  }
-
-  step.test = new NodeTest(this.lexer).parse();
-
-  while (this.lexer.peak() === "[") {
-    if (!step.predicates) {
-      step.predicates = [];
+      step.axis = AxisSpecifier.CHILD;
     }
 
-    step.predicates.push(new Predicate(this.lexer).parse());
-  }
+    step.test = NodeTest.parse(rootParser, lexer);
 
-  return step;
+    while (lexer.peak() === "[") {
+      if (!step.predicates) {
+        step.predicates = [];
+      }
+
+      step.predicates.push(Predicate.parse(rootParser, lexer));
+    }
+
+    return step;
+  },
+
+  isValidOp: function (lexer) {
+    var token = lexer.peak();
+
+    if (typeof token !== "string") {
+      return false;
+    }
+
+    return token === "." ||
+      token === ".." ||
+      token === "@" ||
+      token === "*" ||
+      /^\w/.test(token);
+  }
 };
 
-},{"../axis_specifier":3,"../node_type":5,"./node_test":15,"./predicate":18}],23:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../axis_specifier":3,"../node_type":5,"../validators/axis_specifier":25,"./node_test":15,"./predicate":18}],23:[function(require,module,exports){
 "use strict";
-
-function UnaryExpr (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = UnaryExpr;
 
 var ExprType = require("../expr_type");
 
 var UnionExpr = require("./union_expr");
 
-UnaryExpr.prototype.parse = function () {
-  if (this.lexer.peak() === "-") {
-    this.lexer.next();
+module.exports = {
+  parse: function (rootParser, lexer) {
+    if (lexer.peak() === "-") {
+      lexer.next();
 
-    return {
-      type: ExprType.NEGATION,
-      lhs: new UnaryExpr(this.lexer).parse()
-    };
-  } else {
-    return new UnionExpr(this.lexer).parse();
+      return {
+        type: ExprType.NEGATION,
+        lhs: module.exports.parse(rootParser, lexer)
+      };
+    } else {
+      return UnionExpr.parse(rootParser, lexer);
+    }
   }
 };
 
 },{"../expr_type":4,"./union_expr":24}],24:[function(require,module,exports){
-/* eslint-env node */
-
 "use strict";
-
-function UnionExpr (lexer) {
-  this.lexer = lexer;
-}
-
-module.exports = UnionExpr;
 
 var ExprType = require("../expr_type");
 
 var PathExpr = require("./path_expr");
 
-UnionExpr.prototype.parse = function () {
-  var lhs = new PathExpr(this.lexer).parse();
+module.exports = {
+  parse: function (rootParser, lexer) {
+    var lhs = PathExpr.parse(rootParser, lexer);
 
-  if (this.lexer.peak() === "|") {
-    this.lexer.next();
+    if (lexer.peak() === "|") {
+      lexer.next();
 
-    var rhs = new UnionExpr(this.lexer).parse();
+      var rhs = module.exports.parse(rootParser, lexer);
 
-    return {
-      type: ExprType.UNION,
-      lhs: lhs,
-      rhs: rhs
-    };
-  } else {
-    return lhs;
+      return {
+        type: ExprType.UNION,
+        lhs: lhs,
+        rhs: rhs
+      };
+    } else {
+      return lhs;
+    }
   }
 };
 
 },{"../expr_type":4,"./path_expr":17}],25:[function(require,module,exports){
-/* eslint-env node */
+"use strict";
 
+var AxisSpecifier = require("../axis_specifier");
+
+module.exports = {
+  isValid: function (specifier) {
+    for (var property in AxisSpecifier) {
+      if (AxisSpecifier.hasOwnProperty(property) && AxisSpecifier[property] === specifier) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+};
+
+},{"../axis_specifier":3}],26:[function(require,module,exports){
+"use strict";
+
+var NodeType = require("../node_type");
+
+module.exports = {
+  isValid: function (type) {
+    for (var property in NodeType) {
+      if (NodeType.hasOwnProperty(property) && NodeType[property] === type) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+};
+
+},{"../node_type":5}],27:[function(require,module,exports){
 "use strict";
 
 var XPathLexer = require("xpath-lexer");
@@ -1059,27 +965,25 @@ function XPathAnalyzer (expression) {
   this.lexer = new XPathLexer(expression);
 }
 
+XPathAnalyzer.prototype.parse = function () {
+  var ast = Expr.parse(this.lexer);
+
+  if (this.lexer.empty()) {
+    return ast;
+  } else {
+    throw new Error("Unexpected token at position " + this.lexer.position());
+  }
+};
+
 XPathAnalyzer.AxisSpecifier = AxisSpecifier;
 
 XPathAnalyzer.ExprType = ExprType;
 
 XPathAnalyzer.NodeType = NodeType;
 
-XPathAnalyzer.prototype.parse = function () {
-  var ast = new Expr(this.lexer).parse();
-
-  if (this.lexer.empty()) {
-    return ast;
-  } else {
-    throw new Error("Unexpected token " + this.lexer.peak());
-  }
-};
-
 module.exports = XPathAnalyzer;
 
-},{"./axis_specifier":3,"./expr_type":4,"./node_type":5,"./parsers/expr":10,"xpath-lexer":105}],26:[function(require,module,exports){
-/* eslint-env node */
-
+},{"./axis_specifier":3,"./expr_type":4,"./node_type":5,"./parsers/expr":10,"xpath-lexer":107}],28:[function(require,module,exports){
 "use strict";
 
 module.exports = {
@@ -1096,11 +1000,7 @@ module.exports = {
   }
 };
 
-},{}],27:[function(require,module,exports){
-/* eslint-env node */
-
-module.exports = {};
-
+},{}],29:[function(require,module,exports){
 var XPathAnalyzer = require("xpath-analyzer");
 
 var Ancestor = require("./axes/ancestor");
@@ -1129,6 +1029,8 @@ var PrecedingSibling = require("./axes/preceding_sibling");
 
 var Self = require("./axes/self");
 
+module.exports = {};
+
 module.exports[XPathAnalyzer.AxisSpecifier.ANCESTOR] = Ancestor;
 module.exports[XPathAnalyzer.AxisSpecifier.ANCESTOR_OR_SELF] = AncestorOrSelf;
 module.exports[XPathAnalyzer.AxisSpecifier.ATTRIBUTE] = Attribute;
@@ -1143,175 +1045,158 @@ module.exports[XPathAnalyzer.AxisSpecifier.PRECEDING] = Preceding;
 module.exports[XPathAnalyzer.AxisSpecifier.PRECEDING_SIBLING] = PrecedingSibling;
 module.exports[XPathAnalyzer.AxisSpecifier.SELF] = Self;
 
-},{"./axes/ancestor":28,"./axes/ancestor_or_self":29,"./axes/attribute":30,"./axes/child":31,"./axes/descendant":32,"./axes/descendant_or_self":33,"./axes/following":34,"./axes/following_sibling":35,"./axes/namespace":36,"./axes/parent":37,"./axes/preceding":38,"./axes/preceding_sibling":39,"./axes/self":40,"xpath-analyzer":25}],28:[function(require,module,exports){
-/* eslint-env node */
-
+},{"./axes/ancestor":30,"./axes/ancestor_or_self":31,"./axes/attribute":32,"./axes/child":33,"./axes/descendant":34,"./axes/descendant_or_self":35,"./axes/following":36,"./axes/following_sibling":37,"./axes/namespace":38,"./axes/parent":39,"./axes/preceding":40,"./axes/preceding_sibling":41,"./axes/self":42,"xpath-analyzer":27}],30:[function(require,module,exports){
 "use strict";
 
 var Context = require("../context");
 
 var Node = require("../node");
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
 module.exports = {
-  evaluate: function (context) {
-    var nodes = new NodeSetType();
+  evaluate: function (rootEvaluator, context) {
+    var nodes = new XPathNodeSet();
 
     if (context.getNode().getNodeType() !== Node.DOCUMENT_NODE) {
       nodes = nodes.unshift(context.getNode().getParent());
 
-      nodes = nodes.merge(this.evaluate(new Context(context.getNode().getParent())));
+      nodes = nodes.merge(this.evaluate(rootEvaluator, new Context(context.getNode().getParent())));
     }
 
     return nodes;
   }
 };
 
-},{"../context":41,"../node":94,"../types/node_set_type":96}],29:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../context":43,"../node":96,"../types/xpath_node_set":98}],31:[function(require,module,exports){
 "use strict";
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
 var Ancestor = require("./ancestor");
 
 module.exports = {
-  evaluate: function (context) {
-    var nodes = new NodeSetType([context.getNode()], true);
+  evaluate: function (rootEvaluator, context) {
+    var nodes = new XPathNodeSet([context.getNode()], true);
 
-    return Ancestor.evaluate(context).merge(nodes);
+    return Ancestor.evaluate(rootEvaluator, context).merge(nodes);
   }
 };
 
-},{"../types/node_set_type":96,"./ancestor":28}],30:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_node_set":98,"./ancestor":30}],32:[function(require,module,exports){
 "use strict";
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
 module.exports = {
-  evaluate: function (context) {
-    return new NodeSetType(context.getNode().getAttributes());
+  evaluate: function (rootEvaluator, context) {
+    return new XPathNodeSet(context.getNode().getAttributes());
   }
 };
 
-},{"../types/node_set_type":96}],31:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_node_set":98}],33:[function(require,module,exports){
 "use strict";
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
 module.exports = {
-  evaluate: function (context) {
-    return new NodeSetType(context.getNode().getChildNodes());
+  evaluate: function (rootEvaluator, context) {
+    return new XPathNodeSet(context.getNode().getChildNodes());
   }
 };
 
-},{"../types/node_set_type":96}],32:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_node_set":98}],34:[function(require,module,exports){
 "use strict";
 
 var Context = require("../context");
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
 module.exports = {
-  evaluate: function (context) {
-    var nodes = new NodeSetType();
+  evaluate: function (rootEvaluator, context) {
+    var nodes = new XPathNodeSet();
 
-    var children = new NodeSetType(context.getNode().getChildNodes());
+    var children = new XPathNodeSet(context.getNode().getChildNodes());
 
     var child, iter = children.iterator();
 
     while ((child = iter.next())) {
       nodes = nodes.push(child);
 
-      nodes = nodes.merge(this.evaluate(new Context(child)));
+      nodes = nodes.merge(this.evaluate(rootEvaluator, new Context(child)));
     }
 
     return nodes;
   }
 };
 
-},{"../context":41,"../types/node_set_type":96}],33:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../context":43,"../types/xpath_node_set":98}],35:[function(require,module,exports){
 "use strict";
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
 var Descendant = require("./descendant");
 
 module.exports = {
-  evaluate: function (context) {
-    var nodes = new NodeSetType([context.getNode()]);
+  evaluate: function (rootEvaluator, context) {
+    var nodes = new XPathNodeSet([context.getNode()]);
 
-    return nodes.merge(Descendant.evaluate(context));
+    return nodes.merge(Descendant.evaluate(rootEvaluator, context));
   }
 };
 
-},{"../types/node_set_type":96,"./descendant":32}],34:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_node_set":98,"./descendant":34}],36:[function(require,module,exports){
 "use strict";
 
 var XPathAnalyzer = require("xpath-analyzer");
 
-var RelativeLocationPath = require("../evaluators/relative_location_path");
-
 module.exports = {
-  evaluate: function (context) {
-    return RelativeLocationPath.evaluate({steps: [{
-      axis: XPathAnalyzer.AxisSpecifier.ANCESTOR_OR_SELF,
-      test: {
-        type: XPathAnalyzer.NodeType.NODE
-      }
-    }, {
-      axis: XPathAnalyzer.AxisSpecifier.FOLLOWING_SIBLING,
-      test: {
-        type: XPathAnalyzer.NodeType.NODE
-      }
-    }, {
-      axis: XPathAnalyzer.AxisSpecifier.DESCENDANT_OR_SELF,
-      test: {
-        type: XPathAnalyzer.NodeType.NODE
-      }
-    }]}, context);
+  evaluate: function (rootEvaluator, context) {
+    return rootEvaluator.evaluate({
+      type: XPathAnalyzer.ExprType.RELATIVE_LOCATION_PATH,
+      steps: [{
+        axis: XPathAnalyzer.AxisSpecifier.ANCESTOR_OR_SELF,
+        test: {
+          type: XPathAnalyzer.NodeType.NODE
+        }
+      }, {
+        axis: XPathAnalyzer.AxisSpecifier.FOLLOWING_SIBLING,
+        test: {
+          type: XPathAnalyzer.NodeType.NODE
+        }
+      }, {
+        axis: XPathAnalyzer.AxisSpecifier.DESCENDANT_OR_SELF,
+        test: {
+          type: XPathAnalyzer.NodeType.NODE
+        }
+      }]
+    }, context);
   }
 };
 
-},{"../evaluators/relative_location_path":63,"xpath-analyzer":25}],35:[function(require,module,exports){
-/* eslint-env node */
-
+},{"xpath-analyzer":27}],37:[function(require,module,exports){
 "use strict";
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
 module.exports = {
-  evaluate: function (context) {
-    return new NodeSetType(context.getNode().getFollowingSiblings());
+  evaluate: function (rootEvaluator, context) {
+    return new XPathNodeSet(context.getNode().getFollowingSiblings());
   }
 };
 
-},{"../types/node_set_type":96}],36:[function(require,module,exports){
+},{"../types/xpath_node_set":98}],38:[function(require,module,exports){
 
-},{}],37:[function(require,module,exports){
-/* eslint-env node */
-
+},{}],39:[function(require,module,exports){
 "use strict";
 
 var Node = require("../node");
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
 module.exports = {
-  evaluate: function (context) {
-    var nodes = new NodeSetType();
+  evaluate: function (rootEvaluator, context) {
+    var nodes = new XPathNodeSet();
 
     if (context.getNode().getNodeType() !== Node.DOCUMENT_NODE) {
       nodes = nodes.push(context.getNode().getParent());
@@ -1321,65 +1206,58 @@ module.exports = {
   }
 };
 
-},{"../node":94,"../types/node_set_type":96}],38:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../node":96,"../types/xpath_node_set":98}],40:[function(require,module,exports){
 "use strict";
 
 var XPathAnalyzer = require("xpath-analyzer");
 
-var RelativeLocationPath = require("../evaluators/relative_location_path");
-
 module.exports = {
-  evaluate: function (context) {
-    return RelativeLocationPath.evaluate({steps: [{
-      axis: XPathAnalyzer.AxisSpecifier.ANCESTOR_OR_SELF,
-      test: {
-        type: XPathAnalyzer.NodeType.NODE
-      }
-    }, {
-      axis: XPathAnalyzer.AxisSpecifier.PRECEDING_SIBLING,
-      test: {
-        type: XPathAnalyzer.NodeType.NODE
-      }
-    }, {
-      axis: XPathAnalyzer.AxisSpecifier.DESCENDANT_OR_SELF,
-      test: {
-        type: XPathAnalyzer.NodeType.NODE
-      }
-    }]}, context);
+  evaluate: function (rootEvaluator, context) {
+    return rootEvaluator.evaluate({
+      type: XPathAnalyzer.ExprType.RELATIVE_LOCATION_PATH,
+      steps: [{
+        axis: XPathAnalyzer.AxisSpecifier.ANCESTOR_OR_SELF,
+        test: {
+          type: XPathAnalyzer.NodeType.NODE
+        }
+      }, {
+        axis: XPathAnalyzer.AxisSpecifier.PRECEDING_SIBLING,
+        test: {
+          type: XPathAnalyzer.NodeType.NODE
+        }
+      }, {
+        axis: XPathAnalyzer.AxisSpecifier.DESCENDANT_OR_SELF,
+        test: {
+          type: XPathAnalyzer.NodeType.NODE
+        }
+      }]
+    }, context);
   }
 };
 
-},{"../evaluators/relative_location_path":63,"xpath-analyzer":25}],39:[function(require,module,exports){
-/* eslint-env node */
-
+},{"xpath-analyzer":27}],41:[function(require,module,exports){
 "use strict";
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
 module.exports = {
-  evaluate: function (context) {
-    return new NodeSetType(context.getNode().getPrecedingSiblings());
+  evaluate: function (rootEvaluator, context) {
+    return new XPathNodeSet(context.getNode().getPrecedingSiblings());
   }
 };
 
-},{"../types/node_set_type":96}],40:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_node_set":98}],42:[function(require,module,exports){
 "use strict";
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
 module.exports = {
-  evaluate: function (context) {
-    return new NodeSetType([context.getNode()]);
+  evaluate: function (rootEvaluator, context) {
+    return new XPathNodeSet([context.getNode()]);
   }
 };
 
-},{"../types/node_set_type":96}],41:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_node_set":98}],43:[function(require,module,exports){
 "use strict";
 
 function Context (node, position, last) {
@@ -1406,11 +1284,7 @@ Context.prototype.toString = function () {
 
 module.exports = Context;
 
-},{}],42:[function(require,module,exports){
-/* eslint-env node */
-
-module.exports = {};
-
+},{}],44:[function(require,module,exports){
 var XPathAnalyzer = require("xpath-analyzer");
 
 var AbsoluteLocationPath = require("./evaluators/absolute_location_path");
@@ -1459,6 +1333,8 @@ var Subtractive = require("./evaluators/subtractive");
 
 var Union = require("./evaluators/union");
 
+module.exports = {};
+
 module.exports[XPathAnalyzer.ExprType.ABSOLUTE_LOCATION_PATH] = AbsoluteLocationPath;
 module.exports[XPathAnalyzer.ExprType.ADDITIVE] = Additive;
 module.exports[XPathAnalyzer.ExprType.AND] = And;
@@ -1482,9 +1358,7 @@ module.exports[XPathAnalyzer.ExprType.RELATIVE_LOCATION_PATH] = RelativeLocation
 module.exports[XPathAnalyzer.ExprType.SUBTRACTIVE] = Subtractive;
 module.exports[XPathAnalyzer.ExprType.UNION] = Union;
 
-},{"./evaluators/absolute_location_path":43,"./evaluators/additive":44,"./evaluators/and":45,"./evaluators/divisional":46,"./evaluators/equality":47,"./evaluators/filter":48,"./evaluators/function_call":49,"./evaluators/greater_than":50,"./evaluators/greater_than_or_equal":51,"./evaluators/inequality":53,"./evaluators/less_than":54,"./evaluators/less_than_or_equal":55,"./evaluators/literal":56,"./evaluators/modulus":57,"./evaluators/multiplicative":58,"./evaluators/negation":59,"./evaluators/number":60,"./evaluators/or":61,"./evaluators/path":62,"./evaluators/relative_location_path":63,"./evaluators/subtractive":65,"./evaluators/union":66,"xpath-analyzer":25}],43:[function(require,module,exports){
-/* eslint-env node */
-
+},{"./evaluators/absolute_location_path":45,"./evaluators/additive":46,"./evaluators/and":47,"./evaluators/divisional":48,"./evaluators/equality":49,"./evaluators/filter":50,"./evaluators/function_call":51,"./evaluators/greater_than":52,"./evaluators/greater_than_or_equal":53,"./evaluators/inequality":55,"./evaluators/less_than":56,"./evaluators/less_than_or_equal":57,"./evaluators/literal":58,"./evaluators/modulus":59,"./evaluators/multiplicative":60,"./evaluators/negation":61,"./evaluators/number":62,"./evaluators/or":63,"./evaluators/path":64,"./evaluators/relative_location_path":65,"./evaluators/subtractive":67,"./evaluators/union":68,"xpath-analyzer":27}],45:[function(require,module,exports){
 "use strict";
 
 var Context = require("../context");
@@ -1494,89 +1368,73 @@ var Node = require("../node");
 var RelativeLocationPath = require("./relative_location_path");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
+  evaluate: function (rootEvaluator, ast, context, type) {
     if (context.getNode().getNodeType() !== Node.DOCUMENT_NODE) {
       context = new Context(context.getNode().getOwnerDocument());
     }
 
-    return RelativeLocationPath.evaluate(ast, context, type);
+    return RelativeLocationPath.evaluate(rootEvaluator, ast, context, type);
   }
 };
 
-},{"../context":41,"../node":94,"./relative_location_path":63}],44:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../context":43,"../node":96,"./relative_location_path":65}],46:[function(require,module,exports){
 "use strict";
 
-var XPathExpression = require("../xpath_expression");
-
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
-    var lhs = XPathExpression.evaluate(ast.lhs, context, type);
+  evaluate: function (rootEvaluator, ast, context, type) {
+    var lhs = rootEvaluator.evaluate(ast.lhs, context, type);
 
-    var rhs = XPathExpression.evaluate(ast.rhs, context, type);
+    var rhs = rootEvaluator.evaluate(ast.rhs, context, type);
 
-    return new NumberType(lhs.asNumber() + rhs.asNumber());
+    return new XPathNumber(lhs.asNumber() + rhs.asNumber());
   }
 };
 
-},{"../types/number_type":97,"../xpath_expression":102}],45:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_number":99}],47:[function(require,module,exports){
 "use strict";
 
-var XPathExpression = require("../xpath_expression");
-
-var BooleanType = require("../types/boolean_type");
+var XPathBoolean = require("../types/xpath_boolean");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
-    var lhs = XPathExpression.evaluate(ast.lhs, context, type);
+  evaluate: function (rootEvaluator, ast, context, type) {
+    var lhs = rootEvaluator.evaluate(ast.lhs, context, type);
 
     if (!lhs.asBoolean()) {
-      return new BooleanType(false);
+      return new XPathBoolean(false);
     }
 
-    return XPathExpression.evaluate(ast.rhs, context, type);
+    return rootEvaluator.evaluate(ast.rhs, context, type);
   }
 };
 
-},{"../types/boolean_type":95,"../xpath_expression":102}],46:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_boolean":97}],48:[function(require,module,exports){
 "use strict";
 
-var XPathExpression = require("../xpath_expression");
-
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
-    var lhs = XPathExpression.evaluate(ast.lhs, context, type);
+  evaluate: function (rootEvaluator, ast, context, type) {
+    var lhs = rootEvaluator.evaluate(ast.lhs, context, type);
 
-    var rhs = XPathExpression.evaluate(ast.rhs, context, type);
+    var rhs = rootEvaluator.evaluate(ast.rhs, context, type);
 
-    return new NumberType(lhs.asNumber() / rhs.asNumber());
+    return new XPathNumber(lhs.asNumber() / rhs.asNumber());
   }
 };
 
-},{"../types/number_type":97,"../xpath_expression":102}],47:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_number":99}],49:[function(require,module,exports){
 "use strict";
-
-var XPathExpression = require("../xpath_expression");
 
 var Helper = require("./helper");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
+  evaluate: function (rootEvaluator, ast, context, type) {
     return Helper.compareNodes(
       ast.type,
-      XPathExpression.evaluate(ast.lhs, context, type),
-      XPathExpression.evaluate(ast.rhs, context, type),
+      rootEvaluator.evaluate(ast.lhs, context, type),
+      rootEvaluator.evaluate(ast.rhs, context, type),
       function (lhs, rhs) {
         return lhs === rhs;
       }
@@ -1584,22 +1442,18 @@ module.exports = {
   }
 };
 
-},{"../xpath_expression":102,"./helper":52}],48:[function(require,module,exports){
-/* eslint-env node */
-
+},{"./helper":54}],50:[function(require,module,exports){
 "use strict";
-
-var XPathExpression = require("../xpath_expression");
 
 var Context = require("../context");
 
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
-    var nodes = XPathExpression.evaluate(ast.primary, context, type);
+  evaluate: function (rootEvaluator, ast, context, type) {
+    var nodes = rootEvaluator.evaluate(ast.primary, context, type);
 
     var node, position = 0, filteredNodes = [], iter = nodes.iterator();
 
@@ -1607,13 +1461,13 @@ module.exports = {
       position++;
 
       var keep = ast.predicates.every(function (predicate) {
-        var result = XPathExpression.evaluate(predicate, new Context(node, position, nodes.length()), type);
+        var result = rootEvaluator.evaluate(predicate, new Context(node, position, nodes.length()), type);
 
         if (result === null) {
           return false;
         }
 
-        if (result instanceof NumberType) {
+        if (result instanceof XPathNumber) {
           return result.asNumber() === position;
         } else {
           return result.asBoolean();
@@ -1625,23 +1479,19 @@ module.exports = {
       }
     }
 
-    return new NodeSetType(filteredNodes);
+    return new XPathNodeSet(filteredNodes);
   }
 };
 
-},{"../context":41,"../types/node_set_type":96,"../types/number_type":97,"../xpath_expression":102}],49:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../context":43,"../types/xpath_node_set":98,"../types/xpath_number":99}],51:[function(require,module,exports){
 "use strict";
-
-var XPathExpression = require("../xpath_expression");
 
 var Functions = require("../functions");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
+  evaluate: function (rootEvaluator, ast, context, type) {
     var args = (ast.args || []).map(function (arg) {
-      return XPathExpression.evaluate(arg, context, type);
+      return rootEvaluator.evaluate(arg, context, type);
     });
 
     args.unshift(context);
@@ -1656,21 +1506,17 @@ module.exports = {
   }
 };
 
-},{"../functions":67,"../xpath_expression":102}],50:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../functions":69}],52:[function(require,module,exports){
 "use strict";
-
-var XPathExpression = require("../xpath_expression");
 
 var Helper = require("./helper");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
+  evaluate: function (rootEvaluator, ast, context, type) {
     return Helper.compareNodes(
       ast.type,
-      XPathExpression.evaluate(ast.lhs, context, type),
-      XPathExpression.evaluate(ast.rhs, context, type),
+      rootEvaluator.evaluate(ast.lhs, context, type),
+      rootEvaluator.evaluate(ast.rhs, context, type),
       function (lhs, rhs) {
         return lhs > rhs;
       }
@@ -1678,21 +1524,17 @@ module.exports = {
   }
 };
 
-},{"../xpath_expression":102,"./helper":52}],51:[function(require,module,exports){
-/* eslint-env node */
-
+},{"./helper":54}],53:[function(require,module,exports){
 "use strict";
-
-var XPathExpression = require("../xpath_expression");
 
 var Helper = require("./helper");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
+  evaluate: function (rootEvaluator, ast, context, type) {
     return Helper.compareNodes(
       ast.type,
-      XPathExpression.evaluate(ast.lhs, context, type),
-      XPathExpression.evaluate(ast.rhs, context, type),
+      rootEvaluator.evaluate(ast.lhs, context, type),
+      rootEvaluator.evaluate(ast.rhs, context, type),
       function (lhs, rhs) {
         return lhs >= rhs;
       }
@@ -1700,24 +1542,22 @@ module.exports = {
   }
 };
 
-},{"../xpath_expression":102,"./helper":52}],52:[function(require,module,exports){
-/* eslint-env node */
-
+},{"./helper":54}],54:[function(require,module,exports){
 "use strict";
 
 var XPathAnalyzer = require("xpath-analyzer");
 
-var BooleanType = require("../types/boolean_type");
+var XPathBoolean = require("../types/xpath_boolean");
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
-var StringType = require("../types/string_type");
+var XPathString = require("../types/xpath_string");
 
 module.exports = {
   compareNodes: function (type, lhs, rhs, comparator) {
-    if (lhs instanceof NodeSetType && rhs instanceof NodeSetType) {
+    if (lhs instanceof XPathNodeSet && rhs instanceof XPathNodeSet) {
       var lNode, lIter = lhs.iterator();
 
       while ((lNode = lIter.next())) {
@@ -1725,18 +1565,18 @@ module.exports = {
 
         while ((rNode = rIter.next())) {
           if (comparator(lNode.asString(), rNode.asString())) {
-            return new BooleanType(true);
+            return new XPathBoolean(true);
           }
         }
       }
 
-      return new BooleanType(false);
+      return new XPathBoolean(false);
     }
 
-    if (lhs instanceof NodeSetType || rhs instanceof NodeSetType) {
+    if (lhs instanceof XPathNodeSet || rhs instanceof XPathNodeSet) {
       var nodeSet, primitive;
 
-      if (lhs instanceof NodeSetType) {
+      if (lhs instanceof XPathNodeSet) {
         nodeSet = lhs;
         primitive = rhs;
       } else {
@@ -1747,24 +1587,24 @@ module.exports = {
       var node, iter = nodeSet.iterator();
 
       while ((node = iter.next())) {
-        if (primitive instanceof NumberType) {
+        if (primitive instanceof XPathNumber) {
           if (comparator(node.asNumber(), primitive.asNumber())) {
-            return new BooleanType(true);
+            return new XPathBoolean(true);
           }
-        } else if (primitive instanceof BooleanType) {
+        } else if (primitive instanceof XPathBoolean) {
           if (comparator(node.asBoolean(), primitive.asBoolean())) {
-            return new BooleanType(true);
+            return new XPathBoolean(true);
           }
-        } else if (primitive instanceof StringType) {
+        } else if (primitive instanceof XPathString) {
           if (comparator(node.asString(), primitive.asString())) {
-            return new BooleanType(true);
+            return new XPathBoolean(true);
           }
         } else {
           throw new Error("Unknown value type");
         }
       }
 
-      return new BooleanType(false);
+      return new XPathBoolean(false);
     }
 
     // Neither object is a NodeSet at this point.
@@ -1772,44 +1612,40 @@ module.exports = {
 
     if (type === XPathAnalyzer.ExprType.EQUALITY ||
         type === XPathAnalyzer.ExprType.INEQUALITY) {
-      if (lhs instanceof BooleanType || rhs instanceof BooleanType) {
+      if (lhs instanceof XPathBoolean || rhs instanceof XPathBoolean) {
         if (comparator(lhs.asBoolean(), rhs.asBoolean())) {
-          return new BooleanType(true);
+          return new XPathBoolean(true);
         }
-      } else if (rhs instanceof NumberType || rhs instanceof NumberType) {
+      } else if (rhs instanceof XPathNumber || rhs instanceof XPathNumber) {
         if (comparator(lhs.asNumber(), rhs.asNumber())) {
-          return new BooleanType(true);
+          return new XPathBoolean(true);
         }
-      } else if (rhs instanceof StringType || rhs instanceof StringType) {
+      } else if (rhs instanceof XPathString || rhs instanceof XPathString) {
         if (comparator(lhs.asString(), rhs.asString())) {
-          return new BooleanType(true);
+          return new XPathBoolean(true);
         }
       } else {
         throw new Error("Unknown value types");
       }
 
-      return new BooleanType(false);
+      return new XPathBoolean(false);
     } else {
-      return new BooleanType(comparator(lhs.asNumber(), rhs.asNumber()));
+      return new XPathBoolean(comparator(lhs.asNumber(), rhs.asNumber()));
     }
   }
 };
 
-},{"../types/boolean_type":95,"../types/node_set_type":96,"../types/number_type":97,"../types/string_type":98,"xpath-analyzer":25}],53:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_boolean":97,"../types/xpath_node_set":98,"../types/xpath_number":99,"../types/xpath_string":100,"xpath-analyzer":27}],55:[function(require,module,exports){
 "use strict";
-
-var XPathExpression = require("../xpath_expression");
 
 var Helper = require("./helper");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
+  evaluate: function (rootEvaluator, ast, context, type) {
     return Helper.compareNodes(
       ast.type,
-      XPathExpression.evaluate(ast.lhs, context, type),
-      XPathExpression.evaluate(ast.rhs, context, type),
+      rootEvaluator.evaluate(ast.lhs, context, type),
+      rootEvaluator.evaluate(ast.rhs, context, type),
       function (lhs, rhs) {
         return lhs !== rhs;
       }
@@ -1817,21 +1653,17 @@ module.exports = {
   }
 };
 
-},{"../xpath_expression":102,"./helper":52}],54:[function(require,module,exports){
-/* eslint-env node */
-
+},{"./helper":54}],56:[function(require,module,exports){
 "use strict";
-
-var XPathExpression = require("../xpath_expression");
 
 var Helper = require("./helper");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
+  evaluate: function (rootEvaluator, ast, context, type) {
     return Helper.compareNodes(
       ast.type,
-      XPathExpression.evaluate(ast.lhs, context, type),
-      XPathExpression.evaluate(ast.rhs, context, type),
+      rootEvaluator.evaluate(ast.lhs, context, type),
+      rootEvaluator.evaluate(ast.rhs, context, type),
       function (lhs, rhs) {
         return lhs < rhs;
       }
@@ -1839,21 +1671,17 @@ module.exports = {
   }
 };
 
-},{"../xpath_expression":102,"./helper":52}],55:[function(require,module,exports){
-/* eslint-env node */
-
+},{"./helper":54}],57:[function(require,module,exports){
 "use strict";
-
-var XPathExpression = require("../xpath_expression");
 
 var Helper = require("./helper");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
+  evaluate: function (rootEvaluator, ast, context, type) {
     return Helper.compareNodes(
       ast.type,
-      XPathExpression.evaluate(ast.lhs, context, type),
-      XPathExpression.evaluate(ast.rhs, context, type),
+      rootEvaluator.evaluate(ast.lhs, context, type),
+      rootEvaluator.evaluate(ast.rhs, context, type),
       function (lhs, rhs) {
         return lhs <= rhs;
       }
@@ -1861,128 +1689,104 @@ module.exports = {
   }
 };
 
-},{"../xpath_expression":102,"./helper":52}],56:[function(require,module,exports){
-/* eslint-env node */
-
+},{"./helper":54}],58:[function(require,module,exports){
 "use strict";
 
-var StringType = require("../types/string_type");
+var XPathString = require("../types/xpath_string");
 
 module.exports = {
-  evaluate: function (ast) {
-    return new StringType(ast.string);
+  evaluate: function (rootEvaluator, ast) {
+    return new XPathString(ast.string);
   }
 };
 
-},{"../types/string_type":98}],57:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_string":100}],59:[function(require,module,exports){
 "use strict";
 
-var XPathExpression = require("../xpath_expression");
-
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
-    var lhs = XPathExpression.evaluate(ast.lhs, context, type);
+  evaluate: function (rootEvaluator, ast, context, type) {
+    var lhs = rootEvaluator.evaluate(ast.lhs, context, type);
 
-    var rhs = XPathExpression.evaluate(ast.rhs, context, type);
+    var rhs = rootEvaluator.evaluate(ast.rhs, context, type);
 
-    return new NumberType(lhs.asNumber() % rhs.asNumber());
+    return new XPathNumber(lhs.asNumber() % rhs.asNumber());
   }
 };
 
-},{"../types/number_type":97,"../xpath_expression":102}],58:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_number":99}],60:[function(require,module,exports){
 "use strict";
 
-var XPathExpression = require("../xpath_expression");
-
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
-    var lhs = XPathExpression.evaluate(ast.lhs, context, type);
+  evaluate: function (rootEvaluator, ast, context, type) {
+    var lhs = rootEvaluator.evaluate(ast.lhs, context, type);
 
-    var rhs = XPathExpression.evaluate(ast.rhs, context, type);
+    var rhs = rootEvaluator.evaluate(ast.rhs, context, type);
 
-    return new NumberType(lhs.asNumber() * rhs.asNumber());
+    return new XPathNumber(lhs.asNumber() * rhs.asNumber());
   }
 };
 
-},{"../types/number_type":97,"../xpath_expression":102}],59:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_number":99}],61:[function(require,module,exports){
 "use strict";
 
-var XPathExpression = require("../xpath_expression");
-
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
-    var lhs = XPathExpression.evaluate(ast.lhs, context, type);
+  evaluate: function (rootEvaluator, ast, context, type) {
+    var lhs = rootEvaluator.evaluate(ast.lhs, context, type);
 
-    return new NumberType(-lhs.asNumber());
+    return new XPathNumber(-lhs.asNumber());
   }
 };
 
-},{"../types/number_type":97,"../xpath_expression":102}],60:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_number":99}],62:[function(require,module,exports){
 "use strict";
 
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
-  evaluate: function (ast) {
-    return new NumberType(ast.number);
+  evaluate: function (rootEvaluator, ast) {
+    return new XPathNumber(ast.number);
   }
 };
 
-},{"../types/number_type":97}],61:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_number":99}],63:[function(require,module,exports){
 "use strict";
 
-var XPathExpression = require("../xpath_expression");
-
-var BooleanType = require("../types/boolean_type");
+var XPathBoolean = require("../types/xpath_boolean");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
-    var lhs = XPathExpression.evaluate(ast.lhs, context, type);
+  evaluate: function (rootEvaluator, ast, context, type) {
+    var lhs = rootEvaluator.evaluate(ast.lhs, context, type);
 
     if (lhs.asBoolean()) {
-      return new BooleanType(true);
+      return new XPathBoolean(true);
     }
 
-    return XPathExpression.evaluate(ast.rhs, context, type);
+    return rootEvaluator.evaluate(ast.rhs, context, type);
   }
 };
 
-},{"../types/boolean_type":95,"../xpath_expression":102}],62:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_boolean":97}],64:[function(require,module,exports){
 "use strict";
-
-var XPathExpression = require("../xpath_expression");
 
 var Context = require("../context");
 
 var RelativeLocationPath = require("./relative_location_path");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
-    var nodes = XPathExpression.evaluate(ast.filter, context, type);
+  evaluate: function (rootEvaluator, ast, context, type) {
+    var nodes = rootEvaluator.evaluate(ast.filter, context, type);
 
     if (ast.steps) {
       var nodeSets = [], node, iter = nodes.iterator();
 
       while ((node = iter.next())) {
-        nodeSets.push(RelativeLocationPath.evaluate(ast, new Context(node), type));
+        nodeSets.push(RelativeLocationPath.evaluate(rootEvaluator, ast, new Context(node), type));
       }
 
       nodes = nodeSets.reduce(function (previousValue, currentValue) {
@@ -1994,68 +1798,62 @@ module.exports = {
   }
 };
 
-},{"../context":41,"../xpath_expression":102,"./relative_location_path":63}],63:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../context":43,"./relative_location_path":65}],65:[function(require,module,exports){
 "use strict";
-
-module.exports = {};
 
 var Context = require("../context");
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
 var Step = require("./step");
 
-module.exports.evaluate = function (ast, context, type) {
-  var nodeSet = new NodeSetType([context.getNode()]),
-      nextNodeSet = new NodeSetType();
+module.exports = {
+  evaluate: function (rootEvaluator, ast, context, type) {
+    var nodeSet = new XPathNodeSet([context.getNode()]),
+        nextNodeSet = new XPathNodeSet();
 
-  if (ast.steps) {
-    for (var i = 0; i < ast.steps.length; i++) {
-      var node, iter = nodeSet.iterator();
+    if (ast.steps) {
+      for (var i = 0; i < ast.steps.length; i++) {
+        var node, iter = nodeSet.iterator();
 
-      while ((node = iter.next())) {
-        var stepResult = Step.evaluate(ast.steps[i], new Context(node), type);
+        while ((node = iter.next())) {
+          var stepResult = Step.evaluate(rootEvaluator, ast.steps[i], new Context(node), type);
 
-        nextNodeSet = nextNodeSet.merge(stepResult);
+          nextNodeSet = nextNodeSet.merge(stepResult);
+        }
+
+        nodeSet = nextNodeSet;
+        nextNodeSet = new XPathNodeSet();
       }
-
-      nodeSet = nextNodeSet;
-      nextNodeSet = new NodeSetType();
     }
-  }
 
-  return nodeSet;
+    return nodeSet;
+  }
 };
 
-},{"../context":41,"../types/node_set_type":96,"./step":64}],64:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../context":43,"../types/xpath_node_set":98,"./step":66}],66:[function(require,module,exports){
 "use strict";
 
 var XPathAnalyzer = require("xpath-analyzer");
-
-var XPathExpression = require("../xpath_expression");
 
 var Axes = require("../axes");
 
 var Context = require("../context");
 
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
 var Node = require("../node");
 
 module.exports = {
-  evaluate: function (step, context, type) {
+  evaluate: function (rootEvaluator, step, context, type) {
     var nodes;
 
     var axisEvaluator = Axes[step.axis];
 
     if (axisEvaluator) {
-      nodes = axisEvaluator.evaluate(context, type);
+      nodes = axisEvaluator.evaluate(rootEvaluator, context, type);
     } else {
       throw new Error("Unknown axis specifier " + step.axis);
     }
@@ -2106,13 +1904,13 @@ module.exports = {
         position++;
 
         var keep = step.predicates.every(function (predicate) {
-          var result = XPathExpression.evaluate(predicate, new Context(node, position, nodes.length()), type);
+          var result = rootEvaluator.evaluate(predicate, new Context(node, position, nodes.length()), type);
 
           if (result === null) {
             return false;
           }
 
-          if (result instanceof NumberType) {
+          if (result instanceof XPathNumber) {
             return result.asNumber() === position;
           } else {
             return result.asBoolean();
@@ -2124,54 +1922,42 @@ module.exports = {
         }
       }
 
-      nodes = new NodeSetType(filteredNodes);
+      nodes = new XPathNodeSet(filteredNodes);
     }
 
     return nodes;
   }
 };
 
-},{"../axes":27,"../context":41,"../node":94,"../types/node_set_type":96,"../types/number_type":97,"../xpath_expression":102,"xpath-analyzer":25}],65:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../axes":29,"../context":43,"../node":96,"../types/xpath_node_set":98,"../types/xpath_number":99,"xpath-analyzer":27}],67:[function(require,module,exports){
 "use strict";
 
-var XPathExpression = require("../xpath_expression");
-
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
-  evaluate: function (ast, context, type) {
-    var lhs = XPathExpression.evaluate(ast.lhs, context, type);
+  evaluate: function (rootEvaluator, ast, context, type) {
+    var lhs = rootEvaluator.evaluate(ast.lhs, context, type);
 
-    var rhs = XPathExpression.evaluate(ast.rhs, context, type);
+    var rhs = rootEvaluator.evaluate(ast.rhs, context, type);
 
-    return new NumberType(lhs.asNumber() - rhs.asNumber());
+    return new XPathNumber(lhs.asNumber() - rhs.asNumber());
   }
 };
 
-},{"../types/number_type":97,"../xpath_expression":102}],66:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_number":99}],68:[function(require,module,exports){
 "use strict";
 
-var XPathExpression = require("../xpath_expression");
-
 module.exports = {
-  evaluate: function (ast, context, type) {
-    var lhs = XPathExpression.evaluate(ast.lhs, context, type);
+  evaluate: function (rootEvaluator, ast, context, type) {
+    var lhs = rootEvaluator.evaluate(ast.lhs, context, type);
 
-    var rhs = XPathExpression.evaluate(ast.rhs, context, type);
+    var rhs = rootEvaluator.evaluate(ast.rhs, context, type);
 
     return lhs.merge(rhs);
   }
 };
 
-},{"../xpath_expression":102}],67:[function(require,module,exports){
-/* eslint-env node */
-
-module.exports = {};
-
+},{}],69:[function(require,module,exports){
 /* eslint-disable no-underscore-dangle */
 var Boolean_ = require("./functions/boolean");
 /* eslint-enable no-underscore-dangle */
@@ -2228,6 +2014,8 @@ var Translate = require("./functions/translate");
 
 var True = require("./functions/true");
 
+module.exports = {};
+
 /* eslint-disable dot-notation */
 module.exports["boolean"] = Boolean_;
 module.exports["ceiling"] = Ceiling;
@@ -2256,12 +2044,10 @@ module.exports["translate"] = Translate;
 module.exports["true"] = True;
 /* eslint-enable dot-notation */
 
-},{"./functions/boolean":68,"./functions/ceiling":69,"./functions/concat":70,"./functions/contains":71,"./functions/count":72,"./functions/false":73,"./functions/floor":74,"./functions/id":75,"./functions/last":76,"./functions/local_name":77,"./functions/name":78,"./functions/normalize_space":79,"./functions/not":80,"./functions/number":81,"./functions/position":82,"./functions/round":83,"./functions/starts_with":84,"./functions/string":85,"./functions/string_length":86,"./functions/substring":87,"./functions/substring_after":88,"./functions/substring_before":89,"./functions/sum":90,"./functions/translate":91,"./functions/true":92}],68:[function(require,module,exports){
-/* eslint-env node */
-
+},{"./functions/boolean":70,"./functions/ceiling":71,"./functions/concat":72,"./functions/contains":73,"./functions/count":74,"./functions/false":75,"./functions/floor":76,"./functions/id":77,"./functions/last":78,"./functions/local_name":79,"./functions/name":80,"./functions/normalize_space":81,"./functions/not":82,"./functions/number":83,"./functions/position":84,"./functions/round":85,"./functions/starts_with":86,"./functions/string":87,"./functions/string_length":88,"./functions/substring":89,"./functions/substring_after":90,"./functions/substring_before":91,"./functions/sum":92,"./functions/translate":93,"./functions/true":94}],70:[function(require,module,exports){
 "use strict";
 
-var BooleanType = require("../types/boolean_type");
+var XPathBoolean = require("../types/xpath_boolean");
 
 module.exports = {
   evaluate: function (context, value) {
@@ -2273,16 +2059,14 @@ module.exports = {
       throw new Error("Unknown argument(s)");
     }
 
-    return new BooleanType(value.asBoolean());
+    return new XPathBoolean(value.asBoolean());
   }
 };
 
-},{"../types/boolean_type":95}],69:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_boolean":97}],71:[function(require,module,exports){
 "use strict";
 
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
   evaluate: function (context, number) {
@@ -2294,20 +2078,18 @@ module.exports = {
       throw new Error("Unknown argument(s)");
     }
 
-    if (!(number instanceof NumberType)) {
+    if (!(number instanceof XPathNumber)) {
       throw new Error("Wrong type of argument");
     }
 
-    return new NumberType(Math.ceil(number.asNumber()));
+    return new XPathNumber(Math.ceil(number.asNumber()));
   }
 };
 
-},{"../types/number_type":97}],70:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_number":99}],72:[function(require,module,exports){
 "use strict";
 
-var StringType = require("../types/string_type");
+var XPathString = require("../types/xpath_string");
 
 module.exports = {
   evaluate: function () {
@@ -2323,16 +2105,14 @@ module.exports = {
       return arg.asString();
     });
 
-    return new StringType(args.join(""));
+    return new XPathString(args.join(""));
   }
 };
 
-},{"../types/string_type":98}],71:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_string":100}],73:[function(require,module,exports){
 "use strict";
 
-var BooleanType = require("../types/boolean_type");
+var XPathBoolean = require("../types/xpath_boolean");
 
 module.exports = {
   evaluate: function (context, base, contains) {
@@ -2344,18 +2124,16 @@ module.exports = {
 
     contains = contains.asString();
 
-    return new BooleanType(base.indexOf(contains) !== -1);
+    return new XPathBoolean(base.indexOf(contains) !== -1);
   }
 };
 
-},{"../types/boolean_type":95}],72:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_boolean":97}],74:[function(require,module,exports){
 "use strict";
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
   evaluate: function (context, nodeset) {
@@ -2367,33 +2145,29 @@ module.exports = {
       throw new Error("Unknown argument(s)");
     }
 
-    if (!(nodeset instanceof NodeSetType)) {
+    if (!(nodeset instanceof XPathNodeSet)) {
       throw new Error("Wrong type of argument");
     }
 
-    return new NumberType(nodeset.length());
+    return new XPathNumber(nodeset.length());
   }
 };
 
-},{"../types/node_set_type":96,"../types/number_type":97}],73:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_node_set":98,"../types/xpath_number":99}],75:[function(require,module,exports){
 "use strict";
 
-var BooleanType = require("../types/boolean_type");
+var XPathBoolean = require("../types/xpath_boolean");
 
 module.exports = {
   evaluate: function () {
-    return new BooleanType(false);
+    return new XPathBoolean(false);
   }
 };
 
-},{"../types/boolean_type":95}],74:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_boolean":97}],76:[function(require,module,exports){
 "use strict";
 
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
   evaluate: function (context, number) {
@@ -2405,24 +2179,22 @@ module.exports = {
       throw new Error("Unknown argument(s)");
     }
 
-    if (!(number instanceof NumberType)) {
+    if (!(number instanceof XPathNumber)) {
       throw new Error("Wrong type of argument");
     }
 
-    return new NumberType(Math.floor(number.asNumber()));
+    return new XPathNumber(Math.floor(number.asNumber()));
   }
 };
 
-},{"../types/number_type":97}],75:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_number":99}],77:[function(require,module,exports){
 "use strict";
 
 var Node = require("../node");
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
-var StringType = require("../types/string_type");
+var XPathString = require("../types/xpath_string");
 
 module.exports = {
   evaluate: function (context, value) {
@@ -2436,19 +2208,19 @@ module.exports = {
 
     var node, ids = [];
 
-    if (value instanceof NodeSetType) {
+    if (value instanceof XPathNodeSet) {
       var iter = value.iterator();
 
       while ((node = iter.next())) {
         ids = ids.concat(node.asString().split(/\s+/g));
       }
-    } else if (value instanceof StringType) {
+    } else if (value instanceof XPathString) {
       ids = value.asString().split(/\s+/g);
     } else {
       ids.push(value.asString());
     }
 
-    var nodes = new NodeSetType();
+    var nodes = new XPathNodeSet();
 
     for (var i = 0; i < ids.length; i++) {
       if (context.getNode().getNodeType() === Node.DOCUMENT_NODE) {
@@ -2458,7 +2230,7 @@ module.exports = {
       }
 
       if (node) {
-        nodes = nodes.merge(new NodeSetType([node]));
+        nodes = nodes.merge(new XPathNodeSet([node]));
       }
     }
 
@@ -2466,87 +2238,79 @@ module.exports = {
   }
 };
 
-},{"../node":94,"../types/node_set_type":96,"../types/string_type":98}],76:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../node":96,"../types/xpath_node_set":98,"../types/xpath_string":100}],78:[function(require,module,exports){
 "use strict";
 
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
   evaluate: function (context) {
-    return new NumberType(context.getLast());
+    return new XPathNumber(context.getLast());
   }
 };
 
-},{"../types/number_type":97}],77:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_number":99}],79:[function(require,module,exports){
 "use strict";
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
-var StringType = require("../types/number_type");
+var XPathString = require("../types/xpath_string");
 
 module.exports = {
   evaluate: function (context, nodeset) {
     if (!nodeset) {
-      nodeset = new NodeSetType([context.getNode()]);
+      nodeset = new XPathNodeSet([context.getNode()]);
     }
 
     if (arguments.length > 2) {
       throw new Error("Unknown argument(s)");
     }
 
-    if (!(nodeset instanceof NodeSetType)) {
+    if (!(nodeset instanceof XPathNodeSet)) {
       throw new Error("Wrong type of argument");
     }
 
     if (nodeset.empty()) {
-      return new StringType("");
+      return new XPathString("");
     } else {
-      return new StringType(nodeset.first().getName());
+      return new XPathString(nodeset.first().getName());
     }
   }
 };
 
-},{"../types/node_set_type":96,"../types/number_type":97}],78:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_node_set":98,"../types/xpath_string":100}],80:[function(require,module,exports){
 "use strict";
 
-var StringType = require("../types/string_type");
+var XPathString = require("../types/xpath_string");
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
 module.exports = {
   evaluate: function (context, nodeset) {
     if (!nodeset) {
-      return new StringType(context.getNode().getName());
+      return new XPathString(context.getNode().getName());
     } else {
       if (arguments.length > 2) {
         throw new Error("Unknown argument(s)");
       }
 
-      if (!(nodeset instanceof NodeSetType)) {
+      if (!(nodeset instanceof XPathNodeSet)) {
         throw new Error("Wrong type of argument");
       }
 
       if (nodeset.empty()) {
-        return new StringType("");
+        return new XPathString("");
       } else {
-        return new StringType(nodeset.first().getName());
+        return new XPathString(nodeset.first().getName());
       }
     }
   }
 };
 
-},{"../types/node_set_type":96,"../types/string_type":98}],79:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_node_set":98,"../types/xpath_string":100}],81:[function(require,module,exports){
 "use strict";
 
-var StringType = require("../types/string_type");
+var XPathString = require("../types/xpath_string");
 
 module.exports = {
   evaluate: function (context, value) {
@@ -2562,16 +2326,14 @@ module.exports = {
       string = value.asString();
     }
 
-    return new StringType(string.trim().replace(/\s{2,}/g, " "));
+    return new XPathString(string.trim().replace(/\s{2,}/g, " "));
   }
 };
 
-},{"../types/string_type":98}],80:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_string":100}],82:[function(require,module,exports){
 "use strict";
 
-var BooleanType = require("../types/boolean_type");
+var XPathBoolean = require("../types/xpath_boolean");
 
 module.exports = {
   evaluate: function (context, value) {
@@ -2583,16 +2345,14 @@ module.exports = {
       throw new Error("Unknown argument(s)");
     }
 
-    return new BooleanType(!value.asBoolean());
+    return new XPathBoolean(!value.asBoolean());
   }
 };
 
-},{"../types/boolean_type":95}],81:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_boolean":97}],83:[function(require,module,exports){
 "use strict";
 
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
   evaluate: function (context, value) {
@@ -2604,29 +2364,25 @@ module.exports = {
       throw new Error("Unknown argument(s)");
     }
 
-    return new NumberType(value.asNumber());
+    return new XPathNumber(value.asNumber());
   }
 };
 
-},{"../types/number_type":97}],82:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_number":99}],84:[function(require,module,exports){
 "use strict";
 
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
   evaluate: function (context) {
-    return new NumberType(context.getPosition());
+    return new XPathNumber(context.getPosition());
   }
 };
 
-},{"../types/number_type":97}],83:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_number":99}],85:[function(require,module,exports){
 "use strict";
 
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
   evaluate: function (context, number) {
@@ -2638,20 +2394,18 @@ module.exports = {
       throw new Error("Unknown argument(s)");
     }
 
-    if (!(number instanceof NumberType)) {
+    if (!(number instanceof XPathNumber)) {
       throw new Error("Wrong type of argument");
     }
 
-    return new NumberType(Math.round(number.asNumber()));
+    return new XPathNumber(Math.round(number.asNumber()));
   }
 };
 
-},{"../types/number_type":97}],84:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_number":99}],86:[function(require,module,exports){
 "use strict";
 
-var BooleanType = require("../types/boolean_type");
+var XPathBoolean = require("../types/xpath_boolean");
 
 module.exports = {
   evaluate: function (context, base, substring) {
@@ -2665,41 +2419,37 @@ module.exports = {
 
     var index = base.indexOf(substring);
 
-    return new BooleanType(index === 0);
+    return new XPathBoolean(index === 0);
   }
 };
 
-},{"../types/boolean_type":95}],85:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_boolean":97}],87:[function(require,module,exports){
 "use strict";
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
-var StringType = require("../types/string_type");
+var XPathString = require("../types/xpath_string");
 
 module.exports = {
   evaluate: function (context, value) {
     if (!value) {
-      value = new NodeSetType([context.getNode()]);
+      value = new XPathNodeSet([context.getNode()]);
     }
 
     if (arguments.length > 2) {
       throw new Error("Unknown argument(s)");
     }
 
-    return new StringType(value.asString());
+    return new XPathString(value.asString());
   }
 };
 
-},{"../types/node_set_type":96,"../types/string_type":98}],86:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_node_set":98,"../types/xpath_string":100}],88:[function(require,module,exports){
 "use strict";
 
-var StringType = require("../types/string_type");
+var XPathString = require("../types/xpath_string");
 
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
   evaluate: function (context, string) {
@@ -2710,23 +2460,21 @@ module.exports = {
         throw new Error("Unknown argument(s)");
       }
 
-      if (!(string instanceof StringType)) {
+      if (!(string instanceof XPathString)) {
         throw new Error("Wrong type of argument");
       }
 
       string = string.asString();
     }
 
-    return new NumberType(string.length);
+    return new XPathNumber(string.length);
   }
 };
 
-},{"../types/number_type":97,"../types/string_type":98}],87:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_number":99,"../types/xpath_string":100}],89:[function(require,module,exports){
 "use strict";
 
-var StringType = require("../types/string_type");
+var XPathString = require("../types/xpath_string");
 
 module.exports = {
   evaluate: function (context, base, start, length) {
@@ -2739,31 +2487,29 @@ module.exports = {
     start = Math.round(start.asNumber());
 
     if (isNaN(start) || start === Infinity || start === -Infinity) {
-      return new StringType("");
+      return new XPathString("");
     }
 
     if (length) {
       length = Math.round(length.asNumber());
 
       if (isNaN(length) || length === -Infinity) {
-        return new StringType("");
+        return new XPathString("");
       }
     }
 
     if (length) {
-      return new StringType(base.substring(start - 1, start + length - 1));
+      return new XPathString(base.substring(start - 1, start + length - 1));
     } else {
-      return new StringType(base.substring(start - 1));
+      return new XPathString(base.substring(start - 1));
     }
   }
 };
 
-},{"../types/string_type":98}],88:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_string":100}],90:[function(require,module,exports){
 "use strict";
 
-var StringType = require("../types/string_type");
+var XPathString = require("../types/xpath_string");
 
 module.exports = {
   evaluate: function (context, base, substring) {
@@ -2778,19 +2524,17 @@ module.exports = {
     var index = base.indexOf(substring);
 
     if (index === -1) {
-      return new StringType("");
+      return new XPathString("");
     } else {
-      return new StringType(base.substring(index + substring.length));
+      return new XPathString(base.substring(index + substring.length));
     }
   }
 };
 
-},{"../types/string_type":98}],89:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_string":100}],91:[function(require,module,exports){
 "use strict";
 
-var StringType = require("../types/string_type");
+var XPathString = require("../types/xpath_string");
 
 module.exports = {
   evaluate: function (context, base, substring) {
@@ -2805,21 +2549,19 @@ module.exports = {
     var index = base.indexOf(substring);
 
     if (index === -1) {
-      return new StringType("");
+      return new XPathString("");
     } else {
-      return new StringType(base.substring(0, index));
+      return new XPathString(base.substring(0, index));
     }
   }
 };
 
-},{"../types/string_type":98}],90:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_string":100}],92:[function(require,module,exports){
 "use strict";
 
-var NodeSetType = require("../types/node_set_type");
+var XPathNodeSet = require("../types/xpath_node_set");
 
-var NumberType = require("../types/number_type");
+var XPathNumber = require("../types/xpath_number");
 
 module.exports = {
   evaluate: function (context, nodeset) {
@@ -2831,7 +2573,7 @@ module.exports = {
       throw new Error("Unknown argument(s)");
     }
 
-    if (!(nodeset instanceof NodeSetType)) {
+    if (!(nodeset instanceof XPathNodeSet)) {
       throw new Error("Wrong type of argument");
     }
 
@@ -2841,16 +2583,14 @@ module.exports = {
       sum = sum + node.asNumber();
     }
 
-    return new NumberType(sum);
+    return new XPathNumber(sum);
   }
 };
 
-},{"../types/node_set_type":96,"../types/number_type":97}],91:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_node_set":98,"../types/xpath_number":99}],93:[function(require,module,exports){
 "use strict";
 
-var StringType = require("../types/string_type");
+var XPathString = require("../types/xpath_string");
 
 module.exports = {
   evaluate: function (context, base, mapFrom, mapTo) {
@@ -2858,9 +2598,9 @@ module.exports = {
       throw new Error("Expected three arguments");
     }
 
-    if (!(base instanceof StringType) ||
-        !(mapFrom instanceof StringType) ||
-        !(mapTo instanceof StringType)) {
+    if (!(base instanceof XPathString) ||
+        !(mapFrom instanceof XPathString) ||
+        !(mapTo instanceof XPathString)) {
       throw new Error("Expected string arguments");
     }
 
@@ -2878,26 +2618,22 @@ module.exports = {
       }
     }
 
-    return new StringType(base);
+    return new XPathString(base);
   }
 };
 
-},{"../types/string_type":98}],92:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_string":100}],94:[function(require,module,exports){
 "use strict";
 
-var BooleanType = require("../types/boolean_type");
+var XPathBoolean = require("../types/xpath_boolean");
 
 module.exports = {
   evaluate: function () {
-    return new BooleanType(true);
+    return new XPathBoolean(true);
   }
 };
 
-},{"../types/boolean_type":95}],93:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../types/xpath_boolean":97}],95:[function(require,module,exports){
 /* eslint-disable no-underscore-dangle */
 
 "use strict";
@@ -2956,9 +2692,7 @@ Iterator.prototype.remove = function () {
 
 module.exports = Iterator;
 
-},{}],94:[function(require,module,exports){
-/* eslint-env node */
-
+},{}],96:[function(require,module,exports){
 module.exports = {
   ELEMENT_NODE: 1,
   ATTRIBUTE_NODE: 2,
@@ -2974,32 +2708,28 @@ module.exports = {
   NOTATION_NODE: 12
 };
 
-},{}],95:[function(require,module,exports){
-/* eslint-env node */
-
+},{}],97:[function(require,module,exports){
 "use strict";
 
-function BooleanType (value) {
+function XPathBoolean (value) {
   this.value = value;
 }
 
-BooleanType.prototype.asString = function () {
+XPathBoolean.prototype.asString = function () {
   return "" + this.value;
 };
 
-BooleanType.prototype.asNumber = function () {
+XPathBoolean.prototype.asNumber = function () {
   return this.value ? 1 : 0;
 };
 
-BooleanType.prototype.asBoolean = function () {
+XPathBoolean.prototype.asBoolean = function () {
   return this.value;
 };
 
-module.exports = BooleanType;
+module.exports = XPathBoolean;
 
-},{}],96:[function(require,module,exports){
-/* eslint-env node */
-
+},{}],98:[function(require,module,exports){
 /* eslint-disable no-underscore-dangle */
 
 "use strict";
@@ -3012,7 +2742,7 @@ function Entry (node) {
   this.node = node;
 }
 
-function NodeSetType (value) {
+function XPathNodeSet (value) {
   this.first_ = null;
   this.last_ = null;
   this.length_ = 0;
@@ -3024,27 +2754,27 @@ function NodeSetType (value) {
   }
 }
 
-NodeSetType.prototype.iterator = function (reversed) {
+XPathNodeSet.prototype.iterator = function (reversed) {
   return new Iterator(this, reversed);
 };
 
-NodeSetType.prototype.first = function () {
+XPathNodeSet.prototype.first = function () {
   return this.first_.node;
 };
 
-NodeSetType.prototype.last = function () {
+XPathNodeSet.prototype.last = function () {
   return this.last_.node;
 };
 
-NodeSetType.prototype.length = function () {
+XPathNodeSet.prototype.length = function () {
   return this.length_;
 };
 
-NodeSetType.prototype.empty = function () {
+XPathNodeSet.prototype.empty = function () {
   return this.length() === 0;
 };
 
-NodeSetType.prototype.asString = function () {
+XPathNodeSet.prototype.asString = function () {
   if (this.empty()) {
     return "";
   } else {
@@ -3052,19 +2782,19 @@ NodeSetType.prototype.asString = function () {
   }
 };
 
-NodeSetType.prototype.asNumber = function () {
+XPathNodeSet.prototype.asNumber = function () {
   return +this.asString();
 };
 
-NodeSetType.prototype.asBoolean = function () {
+XPathNodeSet.prototype.asBoolean = function () {
   return this.length() !== 0;
 };
 
-NodeSetType.prototype.merge = function (b) {
-  return NodeSetType.merge(this, b);
+XPathNodeSet.prototype.merge = function (b) {
+  return XPathNodeSet.merge(this, b);
 };
 
-NodeSetType.prototype.push = function (node) {
+XPathNodeSet.prototype.push = function (node) {
   var entry = new Entry(node);
 
   entry.next = null;
@@ -3082,7 +2812,7 @@ NodeSetType.prototype.push = function (node) {
   return this;
 };
 
-NodeSetType.prototype.unshift = function (node) {
+XPathNodeSet.prototype.unshift = function (node) {
   var entry = new Entry(node);
 
   entry.previous = null;
@@ -3100,7 +2830,7 @@ NodeSetType.prototype.unshift = function (node) {
   return this;
 };
 
-NodeSetType.prototype.filter = function (condition) {
+XPathNodeSet.prototype.filter = function (condition) {
   var node, iter = this.iterator();
 
   while ((node = iter.next())) {
@@ -3112,17 +2842,17 @@ NodeSetType.prototype.filter = function (condition) {
   return this;
 };
 
-NodeSetType.merge = function (a, b) {
+XPathNodeSet.merge = function (a, b) {
   var comparator = Adapter.getAdapter().compareDocumentPosition;
 
   if (comparator) {
-    return NodeSetType.mergeWithOrder(a, b, comparator);
+    return XPathNodeSet.mergeWithOrder(a, b, comparator);
   } else {
-    return NodeSetType.mergeWithoutOrder(a, b);
+    return XPathNodeSet.mergeWithoutOrder(a, b);
   }
 };
 
-NodeSetType.mergeWithOrder = function (a, b, comparator) {
+XPathNodeSet.mergeWithOrder = function (a, b, comparator) {
   if (!a.first_) {
     return b;
   } else if (!b.first_) {
@@ -3178,7 +2908,7 @@ NodeSetType.mergeWithOrder = function (a, b, comparator) {
   return merged;
 };
 
-NodeSetType.mergeWithoutOrder = function (a, b) {
+XPathNodeSet.mergeWithoutOrder = function (a, b) {
   var nodes = [], node, iter = a.iterator();
 
   while ((node = iter.next())) {
@@ -3197,10 +2927,10 @@ NodeSetType.mergeWithoutOrder = function (a, b) {
     }
   }
 
-  return new NodeSetType(nodes);
+  return new XPathNodeSet(nodes);
 };
 
-NodeSetType.prototype.toString = function () {
+XPathNodeSet.prototype.toString = function () {
   var node, iter = this.iterator();
 
   var nodes = [];
@@ -3212,57 +2942,51 @@ NodeSetType.prototype.toString = function () {
   return "NodeSet<" + nodes.join(", ") + ">";
 };
 
-module.exports = NodeSetType;
+module.exports = XPathNodeSet;
 
-},{"../adapter":26,"../iterator":93}],97:[function(require,module,exports){
-/* eslint-env node */
-
+},{"../adapter":28,"../iterator":95}],99:[function(require,module,exports){
 "use strict";
 
-function NumberType (value) {
+function XPathNumber (value) {
   this.value = value;
 }
 
-NumberType.prototype.asString = function () {
+XPathNumber.prototype.asString = function () {
   return "" + this.value;
 };
 
-NumberType.prototype.asNumber = function () {
+XPathNumber.prototype.asNumber = function () {
   return this.value;
 };
 
-NumberType.prototype.asBoolean = function () {
+XPathNumber.prototype.asBoolean = function () {
   return !!this.value;
 };
 
-module.exports = NumberType;
+module.exports = XPathNumber;
 
-},{}],98:[function(require,module,exports){
-/* eslint-env node */
-
+},{}],100:[function(require,module,exports){
 "use strict";
 
-function StringType (value) {
+function XPathString (value) {
   this.value = value;
 }
 
-StringType.prototype.asString = function () {
+XPathString.prototype.asString = function () {
   return this.value;
 };
 
-StringType.prototype.asNumber = function () {
+XPathString.prototype.asNumber = function () {
   return +this.value;
 };
 
-StringType.prototype.asBoolean = function () {
+XPathString.prototype.asBoolean = function () {
   return this.value.length !== 0;
 };
 
-module.exports = StringType;
+module.exports = XPathString;
 
-},{}],99:[function(require,module,exports){
-/* eslint-env node */
-
+},{}],101:[function(require,module,exports){
 "use strict";
 
 var XPathExpression = require("./xpath_expression");
@@ -3309,9 +3033,7 @@ module.exports = {
   Node: Node
 };
 
-},{"./adapter":26,"./node":94,"./xpath_expression":102,"./xpath_result":103}],100:[function(require,module,exports){
-/* eslint-env node */
-
+},{"./adapter":28,"./node":96,"./xpath_expression":104,"./xpath_result":105}],102:[function(require,module,exports){
 "use strict";
 
 function XPathException (code, message) {
@@ -3321,24 +3043,14 @@ function XPathException (code, message) {
 
 module.exports = XPathException;
 
-},{}],101:[function(require,module,exports){
-/* eslint-env node */
-
+},{}],103:[function(require,module,exports){
 module.exports = {
   INVALID_EXPRESSION_ERR: 51,
   TYPE_ERR: 52
 };
 
-},{}],102:[function(require,module,exports){
-/* eslint-env node */
-
+},{}],104:[function(require,module,exports){
 "use strict";
-
-function XPathExpression (expression) {
-  this.expression = expression;
-}
-
-module.exports = XPathExpression;
 
 var XPathAnalyzer = require("xpath-analyzer");
 
@@ -3346,10 +3058,14 @@ var Context = require("./context");
 
 var Evaluators = require("./evaluators");
 
+function XPathExpression (expression) {
+  this.expression = expression;
+}
+
 XPathExpression.evaluate = function (ast, context, type) {
   var evaluator = Evaluators[ast.type];
 
-  return evaluator.evaluate(ast, context, type);
+  return evaluator.evaluate(XPathExpression, ast, context, type);
 };
 
 XPathExpression.prototype.evaluate = function (context, type, Adapter) {
@@ -3358,9 +3074,9 @@ XPathExpression.prototype.evaluate = function (context, type, Adapter) {
   return XPathExpression.evaluate(ast, new Context(new Adapter(context)), type);
 };
 
-},{"./context":41,"./evaluators":42,"xpath-analyzer":25}],103:[function(require,module,exports){
-/* eslint-env node */
+module.exports = XPathExpression;
 
+},{"./context":43,"./evaluators":44,"xpath-analyzer":27}],105:[function(require,module,exports){
 "use strict";
 
 var XPathException = require("./xpath_exception");
@@ -3369,25 +3085,25 @@ var XPathExceptionCode = require("./xpath_exception_code");
 
 var XPathResultType = require("./xpath_result_type");
 
-var NodeSetType = require("./types/node_set_type");
+var XPathNodeSet = require("./types/xpath_node_set");
 
-var StringType = require("./types/string_type");
+var XPathString = require("./types/xpath_string");
 
-var NumberType = require("./types/number_type");
+var XPathNumber = require("./types/xpath_number");
 
-var BooleanType = require("./types/boolean_type");
+var XPathBoolean = require("./types/xpath_boolean");
 
 function XPathResult (type, value) {
   this.value = value;
 
   if (type === XPathResultType.ANY_TYPE) {
-    if (value instanceof NodeSetType) {
+    if (value instanceof XPathNodeSet) {
       this.resultType = XPathResultType.UNORDERED_NODE_ITERATOR_TYPE;
-    } else if (value instanceof StringType) {
+    } else if (value instanceof XPathString) {
       this.resultType = XPathResultType.STRING_TYPE;
-    } else if (value instanceof NumberType) {
+    } else if (value instanceof XPathNumber) {
       this.resultType = XPathResultType.NUMBER_TYPE;
-    } else if (value instanceof BooleanType) {
+    } else if (value instanceof XPathBoolean) {
       this.resultType = XPathResultType.BOOLEAN_TYPE;
     } else {
       throw new Error("Unexpected evaluation result");
@@ -3399,7 +3115,7 @@ function XPathResult (type, value) {
   if (this.resultType !== XPathResultType.STRING_TYPE &&
       this.resultType !== XPathResultType.NUMBER_TYPE &&
       this.resultType !== XPathResultType.BOOLEAN_TYPE &&
-      !(value instanceof NodeSetType)) {
+      !(value instanceof XPathNodeSet)) {
     throw Error("Value could not be converted to the specified type");
   }
 
@@ -3505,7 +3221,7 @@ XPathResult.prototype.iterateNext = function () {
 
   this.index = this.index || 0;
 
-  return (this.index.length >= this.nodes.length) ? null : this.nodes[this.index];
+  return (this.index >= this.nodes.length) ? null : this.nodes[this.index++];
 };
 
 XPathResult.prototype.snapshotItem = function (index) {
@@ -3525,9 +3241,7 @@ for (var resultType in XPathResultType) {
 
 module.exports = XPathResult;
 
-},{"./types/boolean_type":95,"./types/node_set_type":96,"./types/number_type":97,"./types/string_type":98,"./xpath_exception":100,"./xpath_exception_code":101,"./xpath_result_type":104}],104:[function(require,module,exports){
-/* eslint-env node */
-
+},{"./types/xpath_boolean":97,"./types/xpath_node_set":98,"./types/xpath_number":99,"./types/xpath_string":100,"./xpath_exception":102,"./xpath_exception_code":103,"./xpath_result_type":106}],106:[function(require,module,exports){
 module.exports = {
   ANY_TYPE: 0,
   NUMBER_TYPE: 1,
@@ -3541,76 +3255,119 @@ module.exports = {
   FIRST_ORDERED_NODE_TYPE: 9
 };
 
-},{}],105:[function(require,module,exports){
-/* eslint-env node */
-
+},{}],107:[function(require,module,exports){
 "use strict";
 
+var lexer = new RegExp([
+  "\\$?(?:(?![0-9-])[\\w-]+:)?(?![0-9-])[\\w-]+",
+  "\\d+\\.\\d+",
+  "\\.\\d+",
+  "\\d+",
+  "\\/\\/",
+  "\/",
+  "\\.\\.",
+  "\\.",
+  "\\s+",
+  "::",
+  ",",
+  "@",
+  "-",
+  "=",
+  "!=",
+  "<=",
+  "<",
+  ">=",
+  ">",
+  "\\|",
+  "\\+",
+  "\\*",
+  "\\(",
+  "\\)",
+  "\\[",
+  "\\]",
+  "\"[^\"]*\"",
+  "'[^']*'"
+].join("|"), "g");
+
 function XPathLexer (expression) {
-  this.tokens = XPathLexer.tokenize(expression);
+  var match = expression.match(lexer);
+
+  if (match === null) {
+    throw new Error("Invalid character at position 0");
+  }
+
+  if (match.join("") !== expression) {
+    var position = 0;
+
+    while (expression.indexOf(match[0]) === position) {
+      position += match.shift().length;
+    }
+
+    throw new Error("Invalid character at position " + position);
+  }
+
+  this.tokens = match.map(function (token) {
+    return {
+      value: token,
+      position: 0
+    };
+  });
+
+  this.tokens.reduce(function (previousToken, nextToken) {
+    nextToken.position = previousToken.position + previousToken.value.length;
+    return nextToken;
+  });
+
+  this.tokens = this.tokens.filter(function (token) {
+    return !/^\s+$/.test(token.value);
+  });
+
   this.index = 0;
 }
 
+XPathLexer.prototype.length = function () {
+  return this.tokens.length;
+};
+
 XPathLexer.prototype.next = function () {
-  return this.tokens[this.index++];
+  if (this.index === this.tokens.length) {
+    return null;
+  } else {
+    var token = this.tokens[this.index++];
+
+    return token && token.value;
+  }
 };
 
 XPathLexer.prototype.back = function () {
-  this.index--;
+  if (this.index > 0) {
+    this.index--;
+  }
 };
 
 XPathLexer.prototype.peak = function (n) {
-  return this.tokens[this.index + (n || 0)];
+  var token = this.tokens[this.index + (n || 0)];
+
+  return token && token.value;
 };
 
 XPathLexer.prototype.empty = function () {
   return this.tokens.length <= this.index;
 };
 
-XPathLexer.tokenize = function (expression) {
-  var match = expression.match(new RegExp([
-    "\\$?(?:(?![0-9-])[\\w-]+:)?(?![0-9-])[\\w-]+",
-    "\\d+\\.\\d+",
-    "\\.\\d+",
-    "\\d+",
-    "\\/\\/",
-    "\/",
-    "\\.\\.",
-    "\\.",
-    "\\s+",
-    "::",
-    ",",
-    "@",
-    "-",
-    "=",
-    "!=",
-    "<=",
-    "<",
-    ">=",
-    ">",
-    "\\|",
-    "\\+",
-    "\\*",
-    "\\(",
-    "\\)",
-    "\\[",
-    "\\]",
-    "\"[^\"]*\"",
-    "'[^']*'"
-  ].join("|"), "g"));
+XPathLexer.prototype.position = function () {
+  if (this.index === this.tokens.length) {
+    var lastToken = this.tokens[this.index - 1];
 
-  if (!match || match.join("") !== expression) {
-    throw new Error("Invalid XPath expression");
+    return lastToken.position + lastToken.value.length;
+  } else {
+    return this.tokens[this.index].position;
   }
-
-  return match.filter(function (token) {
-    return !/^\s+$/.test(token);
-  });
 };
 
 module.exports = XPathLexer;
 
-},{}],106:[function(require,module,exports){
+},{}],108:[function(require,module,exports){
 /* eslint-env node */
 
 var XPathEvaluator = require("xpath-evaluator");
@@ -3621,5 +3378,5 @@ XPathEvaluator.setAdapter(XPathDOM);
 
 module.exports = XPathEvaluator;
 
-},{"./lib/xpath_dom":2,"xpath-evaluator":99}]},{},[1])(1)
+},{"./lib/xpath_dom":2,"xpath-evaluator":101}]},{},[1])(1)
 });

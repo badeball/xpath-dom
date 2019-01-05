@@ -6,8 +6,13 @@ env:
   - BROWSERS=jsdom
   - BROWSERS=Firefox
   - BROWSERS=Chrome
-  - BROWSERS=Opera
   - BROWSERS=Safari
+  - BROWSERS=Edge18
+  - BROWSERS=Edge17
+  - BROWSERS=Edge16
+  - BROWSERS=Edge15
+  - BROWSERS=Edge14
+  - BROWSERS=Edge13
   - BROWSERS=IE11
   - BROWSERS=IE10
   - BROWSERS=IE9
@@ -15,5 +20,17 @@ env:
 matrix:
   allow_failures:
     - env: BROWSERS=IE8
-before_script: make lint
+cache:
+  directories:
+    - node_modules
+stages:
+  - ensure built
+  - lint
+  - test
+jobs:
+  include:
+    - stage: ensure built
+      script: make build && [ -z "$(git status -s dist/)" ]
+    - stage: lint
+      script: make lint
 script: make test-ci

@@ -32,19 +32,13 @@ module.exports = function(config) {
       Firefox: {
         base: "SauceLabs",
         browserName: "Firefox",
-        platform: "Windows 7"
+        platform: "Windows 10"
       },
 
       Chrome: {
         base: "SauceLabs",
         browserName: "Chrome",
-        platform: "Windows 7"
-      },
-
-      Opera: {
-        base: "SauceLabs",
-        browserName: "Opera",
-        platform: "Windows 7"
+        platform: "Windows 10"
       },
 
       Safari: {
@@ -53,18 +47,60 @@ module.exports = function(config) {
         platform: "OS X 10.11"
       },
 
+      Edge18: {
+        base: "SauceLabs",
+        browserName: "MicrosoftEdge",
+        version: "18",
+        platform: "Windows 10"
+      },
+
+      Edge17: {
+        base: "SauceLabs",
+        browserName: "MicrosoftEdge",
+        version: "17",
+        platform: "Windows 10"
+      },
+
+      Edge16: {
+        base: "SauceLabs",
+        browserName: "MicrosoftEdge",
+        version: "16",
+        platform: "Windows 10"
+      },
+
+      Edge15: {
+        base: "SauceLabs",
+        browserName: "MicrosoftEdge",
+        version: "15",
+        platform: "Windows 10"
+      },
+
+      Edge14: {
+        base: "SauceLabs",
+        browserName: "MicrosoftEdge",
+        version: "14",
+        platform: "Windows 10"
+      },
+
+      Edge13: {
+        base: "SauceLabs",
+        browserName: "MicrosoftEdge",
+        version: "13",
+        platform: "Windows 10"
+      },
+
       IE11: {
         base: "SauceLabs",
         browserName: "Internet Explorer",
         version: "11",
-        platform: "Windows 7"
+        platform: "Windows 10"
       },
 
       IE10: {
         base: "SauceLabs",
         browserName: "Internet Explorer",
         version: "10",
-        platform: "Windows 7"
+        platform: "Windows 8"
       },
 
       IE9: {

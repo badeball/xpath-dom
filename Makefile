@@ -12,10 +12,9 @@ test:
 	@$(KARMA) start
 
 test-ci:
-	@$(KARMA) start --browsers $(BROWSERS)
+	@$(KARMA) start --reporters dots,saucelabs --browsers $(BROWSERS)
 
 build:
-	[[ -d dist ]] || mkdir dist
 	$(BROWSERIFY) install.js -s xpath-dom -o dist/xpath-dom.shim.js
 	$(UGLIFYJS) dist/xpath-dom.shim.js --compress warnings=false --mangle --output dist/xpath-dom.shim.min.js
 
