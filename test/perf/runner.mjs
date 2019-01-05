@@ -1,29 +1,29 @@
 import puppeteer from "puppeteer";
 import application from "./application";
 
-const server = application.listen(8080, async () => {
+var server = application.listen(8080, async () => {
   try {
-    const browser = await puppeteer.launch({
+    var browser = await puppeteer.launch({
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
 
     try {
-      const page = await browser.newPage();
+      var page = await browser.newPage();
 
       await page.goto("http://localhost:8080");
 
       page.on("console", (consoleMessage) => {
-        for (const arg of consoleMessage.args()) {
+        for (var arg of consoleMessage.args()) {
           console.log(String(arg).replace(/^JSHandle:/, ""));
         }
       });
 
       await page.evaluate(() => {
-        const expression = ".//p[contains(., 'Hello world!')]";
+        var expression = ".//p[contains(., 'Hello world!')]";
 
-        const suite = new Benchmark.Suite();
+        var suite = new Benchmark.Suite();
 
-        const mockWindow = {
+        var mockWindow = {
           document: {}
         };
 

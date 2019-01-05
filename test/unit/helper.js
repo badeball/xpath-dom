@@ -79,4 +79,4 @@ export function createDocument () {
   return iframe.contentWindow.document;
 }
 
-export const IS_IE9 = navigator.userAgent && navigator.userAgent.indexOf("MSIE 9.0") !== -1;
+export var IS_IE9 = navigator.userAgent && navigator.userAgent.indexOf("MSIE 9.0") !== -1;

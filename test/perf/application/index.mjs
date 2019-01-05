@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 
-const application = express();
+var application = express();
 
 application.get("/lodash.js", function (request, response) {
   response.sendFile(path.resolve(path.join("node_modules", "lodash", "lodash.js")));
