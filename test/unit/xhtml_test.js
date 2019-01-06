@@ -1,8 +1,6 @@
-"use strict";
+import { assertEvaluatesToValue as unboundAssertEvaluatesToValue, createDocument } from "./helper";
 
-var Helper = require("./helper");
-
-var document = Helper.createDocument(
+var document = createDocument(
   "<?xml version='1.0' encoding='UTF-8'?>",
   "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN'",
   "    'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>",
@@ -12,7 +10,7 @@ var document = Helper.createDocument(
   "</html>"
 );
 
-var assertEvaluatesToValue = Helper.assertEvaluatesToValue.bind(null, document.body.firstChild);
+var assertEvaluatesToValue = unboundAssertEvaluatesToValue.bind(null, document.body.firstChild);
 
 // TODO: Remove namespace prefix from test 01 once support for namespaces are implemented.
 

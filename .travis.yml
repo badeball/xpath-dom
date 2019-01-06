@@ -33,4 +33,4 @@ jobs:
       script: make build && [ -z "$(git status -s dist/)" ]
     - stage: lint
       script: make lint
-script: make test-ci
+script: env TEST_AGAINST_BUILD=1 make test-ci

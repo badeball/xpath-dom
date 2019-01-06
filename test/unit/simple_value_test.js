@@ -1,8 +1,6 @@
-"use strict";
+import { assertEvaluatesToNodeSet as unboundAssertEvaluatesToNodeSet, assertEvaluatesToValue as unboundAssertEvaluatesToValue, createDocument } from "./helper";
 
-var Helper = require("./helper");
-
-var document = Helper.createDocument(
+var document = createDocument(
   "<html>",
   "  <head>",
   "    <title>Title</title>",
@@ -25,9 +23,9 @@ var document = Helper.createDocument(
 
 var DOCUMENT_AS_STRING = "Title hoge 3 1 2 3 4 5";
 
-var assertEvaluatesToNodeSet = Helper.assertEvaluatesToNodeSet.bind(null, document);
+var assertEvaluatesToNodeSet = unboundAssertEvaluatesToNodeSet.bind(null, document);
 
-var assertEvaluatesToValue = Helper.assertEvaluatesToValue.bind(null, document);
+var assertEvaluatesToValue = unboundAssertEvaluatesToValue.bind(null, document);
 
 suite("XPathDOM", function () {
   suite("simple value", function () {

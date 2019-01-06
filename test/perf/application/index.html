@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript">
+      window.document.native_evaluate = window.document.evaluate;
+      window.native_XPathResult = window.XPathResult;
+
+      window.document.evaluate = null;
+      window.document.createExpression = null;
+      window.document.createNSResolver = null;
+      window.XPathResult = null;
+
+      if (window.document.evaluate || window.document.createExpression || window.document.createNSResolver || window.XPathResult) {
+        throw new Error("Unable to remove existing implementation");
+      }
+    </script>
+    <script type="text/javascript" src="lodash.js"></script>
+    <script type="text/javascript" src="benchmark.js"></script>
+    <script type="text/javascript" src="xpath-dom.js"></script>
+    <script type="text/javascript" src="wgxpath.js"></script>
+  </head>
+  <body>
+    <p>Hello world!</p>
+  </body>
+</html>

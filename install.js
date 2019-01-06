@@ -1,18 +1,8 @@
-/* eslint-env browser, node */
+import { evaluate, createExpression, createNSResolver, XPathResult } from "./register";
 
 if (!window.document.evaluate) {
-  var XPathEvaluator = require("./register");
-
-  window.document.evaluate = XPathEvaluator.evaluate;
-  window.document.createExpression = XPathEvaluator.createExpression;
-  window.document.createNSResolver = XPathEvaluator.createNSResolver;
-  window.XPathResult = XPathEvaluator.XPathResult;
-
-  var property;
-
-  for (property in XPathEvaluator.XPathResultType) {
-    if (XPathEvaluator.XPathResultType.hasOwnProperty(property)) {
-      window.XPathResult[property] = XPathEvaluator.XPathResultType[property];
-    }
-  }
+  window.document.evaluate = evaluate;
+  window.document.createExpression = createExpression;
+  window.document.createNSResolver = createNSResolver;
+  window.XPathResult = XPathResult;
 }

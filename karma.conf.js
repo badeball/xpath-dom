@@ -1,21 +1,50 @@
-/* eslint-env node */
-
 "use strict";
+
+const resolve = require("rollup-plugin-node-resolve");
+const commonjs = require("rollup-plugin-commonjs");
+
+const resolveModuleToTestAgainst = {
+  resolveId(id) {
+    if (id === "xpath-dom") {
+      if (process.env.TEST_AGAINST_BUILD === "1") {
+        return "test/unit/export_shims_helper.js";
+      } else {
+        return "register.js";
+      }
+    }
+  }
+};
 
 module.exports = function(config) {
   config.set({
-    frameworks: ["browserify", "mocha", "es5-shim"],
+    frameworks: ["mocha", "es5-shim"],
 
     files: [
-      "test/**/*_test.js"
+      "test/unit/**/*_test.js"
     ],
 
     preprocessors: {
-      "test/**/*_test.js": "browserify"
+      "test/unit/**/*_test.js": ["rollup"]
     },
 
-    browserify: {
-      debug: true
+    rollupPreprocessor: {
+      output: {
+        format: "iife"
+      },
+      plugins: [
+        resolve({
+          browser: true,
+          preferBuiltins: false
+        }),
+        commonjs(),
+        resolveModuleToTestAgainst
+      ]
+    },
+
+    babelPreprocessor: {
+      options: {
+        presets: ["es2015"]
+      }
     },
 
     client: {
