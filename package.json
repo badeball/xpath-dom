@@ -1,6 +1,6 @@
 {
   "name": "xpath-dom",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "A DOM adapter for xpath-evaluator.",
   "main": "lib/xpath_dom.js",
   "author": "Jonas Amundsen <jonasba@gmail.com>",
