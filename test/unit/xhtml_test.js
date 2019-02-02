@@ -1,4 +1,7 @@
-import { assertEvaluatesToValue as unboundAssertEvaluatesToValue, createDocument } from "./helper";
+import {
+  assertEvaluatesToValue as unboundAssertEvaluatesToValue,
+  createDocument
+} from "./helper";
 
 var document = createDocument(
   "<?xml version='1.0' encoding='UTF-8'?>",

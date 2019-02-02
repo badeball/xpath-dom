@@ -1,4 +1,7 @@
-import { assertEvaluatesToNodeSet as unboundAssertEvaluatesToNodeSet, createDocument } from "./helper";
+import {
+  assertEvaluatesToNodeSet as unboundAssertEvaluatesToNodeSet,
+  createDocument
+} from "./helper";
 
 var document = createDocument(
   "<html>",

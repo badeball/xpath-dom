@@ -1,4 +1,8 @@
-import { assertEvaluatesToNodeSet as unboundAssertEvaluatesToNodeSet, createDocument, IS_IE9 } from "./helper";
+import {
+  assertEvaluatesToNodeSet as unboundAssertEvaluatesToNodeSet,
+  createDocument,
+  IS_IE9
+} from "./helper";
 
 var document = createDocument(
   "<html>",
@@ -394,6 +398,10 @@ suite("XPathDOM", function () {
     });
 
     test("83", function () {
+      assertEvaluatesToNodeSet("//blockquote/processing-instruction('pi')", []);
+    });
+
+    test("84", function () {
       assertEvaluatesToNodeSet("//blockquote/processing-instruction('pi')", []);
     });
   });

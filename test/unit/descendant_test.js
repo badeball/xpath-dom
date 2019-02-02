@@ -1,4 +1,7 @@
-import { assertEvaluatesToNodeSet as unboundAssertEvaluatesToNodeSet, createDocument } from "./helper";
+import {
+  assertEvaluatesToNodeSet as unboundAssertEvaluatesToNodeSet,
+  createDocument
+} from "./helper";
 
 /**
  * Several of these tests relies on there not being any text nodes within the document. Hence the
