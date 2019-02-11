@@ -9,13 +9,13 @@ lint:
 	@$(ESLINT) .
 
 test:
-	@$(KARMA) start
+	$(KARMA) start
 
 test-ci:
-	@$(KARMA) start --reporters dots,saucelabs --browsers $(BROWSERS)
+	$(KARMA) start --reporters dots,saucelabs --browsers $(BROWSERS)
 
 test-perf:
-	@node --no-warnings --experimental-modules test/perf/runner.mjs
+	node --no-warnings --experimental-modules test/perf/runner.mjs
 
 build:
 	$(ROLLUP) install.js --config --format iife --file dist/xpath-dom.shim.js
