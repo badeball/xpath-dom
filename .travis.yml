@@ -25,12 +25,9 @@ cache:
     - node_modules
 stages:
   - ensure built
-  - lint
   - test
 jobs:
   include:
     - stage: ensure built
       script: make build && [ -z "$(git status -s dist/)" ]
-    - stage: lint
-      script: make lint
 script: env TEST_AGAINST_BUILD=1 make test-ci

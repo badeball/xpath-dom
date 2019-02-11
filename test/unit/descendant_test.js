@@ -5,7 +5,6 @@ import { assertEvaluatesToNodeSet as unboundAssertEvaluatesToNodeSet, createDocu
  * mangled indenting.
  */
 
-/* eslint-disable indent */
 var document = createDocument(
   "<html>",
     "<head>",
@@ -16,7 +15,6 @@ var document = createDocument(
     "</body>",
   "</html>"
 );
-/* eslint-enable indent */
 
 var assertEvaluatesToNodeSet = unboundAssertEvaluatesToNodeSet.bind(null, document);
 

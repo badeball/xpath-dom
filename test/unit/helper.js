@@ -27,8 +27,7 @@ export function assertEvaluatesToNodeSet (contextNode, expression, nodes) {
         Assert.equal(result.snapshotItem(i).className, className);
       }
     } else {
-      // Somehow, ESLint fails to lint this expression correctly. The removal of the escapement makes it an invalid expression.
-      match = nodes[i].match(/^(\w+)(?:\(([^\)]*)\))?$/); // eslint-disable-line no-useless-escape
+      match = nodes[i].match(/^(\w+)(?:\(([^\)]*)\))?$/);
 
       var nodeType = match[1],
           nodeValue = match[2];

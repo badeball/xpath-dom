@@ -1,12 +1,12 @@
 KARMA := ./node_modules/.bin/karma
-ESLINT := ./node_modules/.bin/eslint
 ROLLUP := ./node_modules/.bin/rollup
 UGLIFYJS := ./node_modules/.bin/uglifyjs
 
 all: lint test
 
 lint:
-	@$(ESLINT) .
+	echo "Not yet implemented"
+	false
 
 test:
 	$(KARMA) start
