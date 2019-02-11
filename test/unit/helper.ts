@@ -2,40 +2,50 @@ import Assert from "assert";
 
 import { evaluate, XPathResult } from "xpath-dom";
 
-export function assertEvaluatesToNodeSet (contextNode, expression, nodes) {
+function isElement (node: Node): node is Element {
+  return !!(node as any).tagName;
+}
+
+export function assertEvaluatesToNodeSet (contextNode: Node, expression: string, nodes: string[]) {
   var result = evaluate(expression, contextNode, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
 
   var match;
 
   for (var i = 0; i < nodes.length; i++) {
-    if (result.snapshotItem(i).tagName) {
+    var item = result.snapshotItem(i);
+
+    if (!item) {
+      continue;
+    }
+
+    if (isElement(item)) {
       match = nodes[i].match(/(\w+)(?:#([^.]+))?(?:\.([\w\d-]+))?/);
 
-      var tagName = match[1],
-          idName = match[2],
-          className = match[3];
+      var tagName = match![1],
+          idName = match![2],
+          className = match![3];
 
       if (tagName) {
-        Assert.equal(result.snapshotItem(i).tagName.toLowerCase(), tagName);
+        Assert.equal(item.tagName.toLowerCase(), tagName);
       }
 
       if (idName) {
-        Assert.equal(result.snapshotItem(i).id, idName);
+        Assert.equal(item.id, idName);
       }
 
       if (className) {
-        Assert.equal(result.snapshotItem(i).className, className);
+        Assert.equal(item.className, className);
       }
-    } else {
+    } else if (item) {
       match = nodes[i].match(/^(\w+)(?:\(([^\)]*)\))?$/);
 
-      var nodeType = match[1],
-          nodeValue = match[2];
+      var nodeType = match![1],
+          nodeValue = match![2];
 
-      Assert.equal("#" + nodeType, result.snapshotItem(i).nodeName);
+      Assert.equal("#" + nodeType, item.nodeName);
 
       if (nodeValue) {
-        Assert.equal(nodeValue, result.snapshotItem(i).nodeValue);
+        Assert.equal(nodeValue, item.nodeValue);
       }
     }
   }
@@ -43,7 +53,7 @@ export function assertEvaluatesToNodeSet (contextNode, expression, nodes) {
   Assert.equal(result.snapshotLength, nodes.length);
 }
 
-export function assertEvaluatesToValue (contextNode, expression, value) {
+export function assertEvaluatesToValue (contextNode: Node, expression: string, value: number | string | boolean) {
   var result = evaluate(expression, contextNode, null, XPathResult.ANY_TYPE);
 
   switch (result.resultType) {
@@ -64,18 +74,16 @@ export function assertEvaluatesToValue (contextNode, expression, value) {
   }
 }
 
-export function createDocument () {
-  var args = [].slice.call(arguments);
-
+export function createDocument (...args: string[]) {
   var html = args.join("");
 
   var iframe = document.createElement("iframe");
 
   document.body.appendChild(iframe);
 
-  iframe.contentWindow.document.write(html);
+  iframe.contentWindow!.document.write(html);
 
-  return iframe.contentWindow.document;
+  return iframe.contentWindow!.document;
 }
 
 export var IS_IE9 = navigator.userAgent && navigator.userAgent.indexOf("MSIE 9.0") !== -1;

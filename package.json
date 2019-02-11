@@ -9,9 +9,10 @@
     "url": "git://github.com/badeball/xpath-dom.git"
   },
   "dependencies": {
-    "xpath-evaluator": "^4.0.0"
+    "xpath-evaluator": "^5.0.0"
   },
   "devDependencies": {
+    "@types/mocha": "^5.2.6",
     "assert": "^1.4.1",
     "benchmark": "^2.1.4",
     "express": "^4.16.4",
@@ -23,6 +24,7 @@
     "karma-phantomjs-launcher": "^1.0.4",
     "karma-rollup-preprocessor": "^6.1.2",
     "karma-sauce-launcher": "^2.0.2",
+    "karma-transform-path-preprocessor": "0.0.3",
     "lodash": "^4.17.11",
     "mocha": "^3.5.3",
     "phantomjs": "^2.1.7",
@@ -30,7 +32,9 @@
     "rollup": "^0.68.2",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^4.0.0",
-    "uglify-es": "^3.3.9",
+    "rollup-plugin-typescript2": "^0.19.2",
+    "typescript": "^3.3.3",
+    "uglify-js": "^3.4.9",
     "wgxpath": "^1.2.0"
   },
   "files": [
