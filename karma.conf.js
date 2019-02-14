@@ -20,11 +20,11 @@ module.exports = function(config) {
     frameworks: ["mocha", "es5-shim"],
 
     files: [
-      "test/unit/**/*_test.js"
+      "test/unit/index.js"
     ],
 
     preprocessors: {
-      "test/unit/**/*_test.js": ["rollup"]
+      "test/unit/index.js": ["rollup"]
     },
 
     rollupPreprocessor: {
