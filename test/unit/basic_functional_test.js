@@ -404,5 +404,9 @@ suite("XPathDOM", function () {
     test("84", function () {
       assertEvaluatesToNodeSet("//blockquote/processing-instruction('pi')", []);
     });
+
+    test("85", function () {
+      assertEvaluatesToNodeSet(".//blockquote/ancestor::*[true()]", ["html", "body", "div", "center"]);
+    });
   });
 });
