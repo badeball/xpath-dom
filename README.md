@@ -30,9 +30,9 @@ It works perfectly well together with [jsdom][jsdom].
 [jsdom]: https://github.com/tmpvar/jsdom
 
 ```javascript
-var XPath = require("xpath-dom");
+var XPathEvaluator = require("xpath-dom");
 
-XPath.evaluate("//*", document, null, XPath.XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
+XPathEvaluator.evaluate("//*", document, null, XPath.XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
 ```
 
 ## Known issues
