@@ -21,6 +21,8 @@ build:
 	cp symbol.shim.js dist/xpath-dom.shim.js
 	$(ROLLUP) install.ts --config --format iife >> dist/xpath-dom.shim.js
 	sed -i "s/\/\*\* @class \*\/ /\/\*@__PURE__\*\//g" dist/xpath-dom.shim.js
+	$(ROLLUP) register.ts --config --format cjs --file dist/xpath-dom.cjs.js
+	$(ROLLUP) register.ts --config --format esm --file dist/xpath-dom.esm.js
 	$(UGLIFYJS) dist/xpath-dom.shim.js --ie8 --compress warnings=false --mangle --output dist/xpath-dom.shim.min.js
 	sed -i -r 's/ {4}/  /g' dist/xpath-dom.shim.js
 	sed -i -r 's/ {4}/  /g' dist/xpath-dom.shim.min.js
