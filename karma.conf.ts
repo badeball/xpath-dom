@@ -2,29 +2,19 @@
 
 const resolve = require("rollup-plugin-node-resolve");
 const commonjs = require("rollup-plugin-commonjs");
-
-const resolveModuleToTestAgainst = {
-  resolveId(id) {
-    if (id === "xpath-dom") {
-      if (process.env.TEST_AGAINST_BUILD === "1") {
-        return "test/unit/export_shims_helper.js";
-      } else {
-        return "register.js";
-      }
-    }
-  }
-};
+const typescript = require("rollup-plugin-typescript2");
 
 module.exports = function(config) {
   config.set({
     frameworks: ["mocha", "es5-shim"],
 
     files: [
-      "test/unit/**/*_test.js"
+      "symbol.shim.js",
+      "test/unit/index.ts"
     ],
 
     preprocessors: {
-      "test/unit/**/*_test.js": ["rollup"]
+      "test/unit/index.ts": ["rollup", "transformPath"]
     },
 
     rollupPreprocessor: {
@@ -37,8 +27,33 @@ module.exports = function(config) {
           preferBuiltins: false
         }),
         commonjs(),
-        resolveModuleToTestAgainst
+        typescript({
+          tsconfigDefaults: {
+            compilerOptions: {
+              target: "ES5",
+              baseUrl: ".",
+              paths: {
+                "xpath-dom": [process.env.TEST_AGAINST_BUILD === "1" ? "test/unit/export_shims_helper.ts" : "register.ts"]
+              }
+            }
+          },
+          include: [
+            "*.ts+(|x)",
+            "**/*.ts+(|x)",
+            "node_modules/xpath-*/**/*"
+          ]
+        })
       ]
+    },
+
+    transformPathPreprocessor: {
+      transformer(path) {
+        if (path.endsWith(".ts")) {
+          return path.substring(0, path.length - 3) + ".js";
+        } else {
+          return path;
+        }
+      }
     },
 
     babelPreprocessor: {

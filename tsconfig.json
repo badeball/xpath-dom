@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "newLine": "LF",
+    "strictNullChecks": true,
+    "target": "ES3",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "downlevelIteration": true
+  }
+}
