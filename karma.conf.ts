@@ -66,6 +66,10 @@ module.exports = function(config) {
 
     logLevel: config.LOG_INFO,
 
+    sauceLabs: {
+      build: process.env.TRAVIS_BUILD_NUMBER
+    },
+
     customLaunchers: {
       Firefox: {
         base: "SauceLabs",
