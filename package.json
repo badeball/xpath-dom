@@ -9,9 +9,6 @@
     "type": "git",
     "url": "git://github.com/badeball/xpath-dom.git"
   },
-  "dependencies": {
-    "xpath-evaluator": "^5.0.0"
-  },
   "devDependencies": {
     "@types/mocha": "^5.2.6",
     "assert": "^1.4.1",
@@ -36,7 +33,8 @@
     "rollup-plugin-typescript2": "^0.19.2",
     "typescript": "^3.3.3",
     "uglify-js": "^3.4.9",
-    "wgxpath": "^1.2.0"
+    "wgxpath": "^1.2.0",
+    "xpath-evaluator": "^5.0.0"
   },
   "files": [
     "install.js",
