@@ -56,12 +56,6 @@ module.exports = function(config) {
       }
     },
 
-    babelPreprocessor: {
-      options: {
-        presets: ["es2015"]
-      }
-    },
-
     client: {
       mocha: {
         ui: "tdd"
